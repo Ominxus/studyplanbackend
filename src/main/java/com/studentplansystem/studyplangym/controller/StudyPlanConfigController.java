@@ -14,7 +14,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/config")
 @CrossOrigin(origins = {
-        "http://localhost:5173", "https://studyplanfrontend.vercel.app/"
+        "http://localhost:5173", "https://studyplanfrontend.vercel.app"
 })
 public class StudyPlanConfigController {
 

@@ -12,7 +12,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/studyplans")
-@CrossOrigin(origins = {"http://localhost:5173", "https://studyplanfrontend.vercel.app/"})
+@CrossOrigin(origins = {"http://localhost:5173", "https://studyplanfrontend.vercel.app"})
 public class StudyPlanController {
 
     private final StudyPlanRepository repository;
