@@ -18,16 +18,6 @@ public class SubjectEntry {
     @Column(name = "grade_iv_hours")
     private int gradeIvHours;
 
-    private String selectedGrade;
-
-    public String getSelectedGrade() {
-        return selectedGrade;
-    }
-
-    public void setSelectedGrade(String selectedGrade) {
-        this.selectedGrade = selectedGrade;
-    }
-
     public Long getId() {
         return id;
     }

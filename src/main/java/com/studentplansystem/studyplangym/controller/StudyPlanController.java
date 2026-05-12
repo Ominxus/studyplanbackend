@@ -12,7 +12,6 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/studyplans")
-
 public class StudyPlanController {
 
     private final StudyPlanRepository repository;
