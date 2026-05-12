@@ -13,7 +13,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/config")
-
+    
 public class StudyPlanConfigController {
 
     private final CategoryRepository categoryRepository;
