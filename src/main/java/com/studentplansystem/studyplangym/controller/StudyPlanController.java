@@ -21,8 +21,23 @@ public class StudyPlanController {
     }
 
     @PostMapping
-    public StudyPlan createStudyPlan(@RequestBody StudyPlan studyPlan) {
-        return repository.save(studyPlan);
+    public ResponseEntity<?> createStudyPlan(@RequestBody StudyPlan studyPlan) {
+        if (studyPlan.getStudentNumber() == null || studyPlan.getStudentNumber().trim().isEmpty()) {
+            return ResponseEntity.badRequest().body("Student number is required.");
+        }
+
+        String studentNumber = studyPlan.getStudentNumber().trim();
+
+        if (repository.existsByStudentNumber(studentNumber)) {
+            return ResponseEntity
+                    .badRequest()
+                    .body("You have already submitted a study plan. Only one submission is allowed.");
+        }
+
+        studyPlan.setStudentNumber(studentNumber);
+
+        StudyPlan savedPlan = repository.save(studyPlan);
+        return ResponseEntity.ok(savedPlan);
     }
 
     @GetMapping
