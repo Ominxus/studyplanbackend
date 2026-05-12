@@ -1,7 +1,8 @@
 package com.studentplansystem.studyplangym.entity;
 
 import jakarta.persistence.*;
-import java.util.List;
+
+import java.util.*;
 
 @Entity
 @Table(name = "category")
@@ -18,7 +19,7 @@ public class Category {
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
     @JoinColumn(name = "category_id")
-    private List<SubjectOption> subjects;
+    private List<SubjectOption> subjects = new ArrayList<>();
 
     public Long getId() {
         return id;

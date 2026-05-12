@@ -9,7 +9,7 @@ import com.studentplansystem.studyplangym.repository.SchoolYearOptionRepository;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
+import java.util.*;
 
 @RestController
 @RequestMapping("/api/config")
@@ -67,14 +67,20 @@ public class StudyPlanConfigController {
     }
 
     @PostMapping("/categories/{categoryId}/subjects")
-    public ResponseEntity<Category> addSubjectToCategory(
+    public ResponseEntity<?> addSubjectToCategory(
             @PathVariable Long categoryId,
             @RequestBody SubjectOption subject
     ) {
         return categoryRepository.findById(categoryId)
                 .map(category -> {
+                    if (category.getSubjects() == null) {
+                        category.setSubjects(new ArrayList<>());
+                    }
+
                     category.getSubjects().add(subject);
-                    return ResponseEntity.ok(categoryRepository.save(category));
+                    Category savedCategory = categoryRepository.save(category);
+
+                    return ResponseEntity.ok(savedCategory);
                 })
                 .orElse(ResponseEntity.notFound().build());
     }
