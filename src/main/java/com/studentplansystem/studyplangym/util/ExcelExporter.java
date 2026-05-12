@@ -44,10 +44,8 @@ public class ExcelExporter {
 
         CellStyle metaHeaderStyle = createMetaHeaderStyle(workbook);
         CellStyle studentStyle = createStudentStyle(workbook);
-        CellStyle verticalHeaderDefault = createVerticalHeaderStyle(workbook, IndexedColors.LIGHT_BLUE.getIndex());
         CellStyle numberStyle = createNumberStyle(workbook);
-        CellStyle yellowNumberStyle = createNumberStyleWithFill(workbook, IndexedColors.LIGHT_YELLOW.getIndex());
-        CellStyle blueNumberStyle = createNumberStyleWithFill(workbook, IndexedColors.PALE_BLUE.getIndex());
+        CellStyle selectedStyle = createNumberStyleWithFill(workbook, IndexedColors.LIGHT_GREEN.getIndex());
 
         Row titleRow = sheet.createRow(0);
         titleRow.setHeightInPoints(190);
@@ -75,7 +73,7 @@ public class ExcelExporter {
             createCell(titleRow, col, subjectName, subjectHeaderStyle);
             createCell(filterRow, col, "", createFilterRowStyle(workbook, color));
 
-            sheet.setColumnWidth(col, 1200);
+            sheet.setColumnWidth(col, 1600);
         }
 
         int rowIndex = 2;
@@ -108,14 +106,8 @@ public class ExcelExporter {
                     continue;
                 }
 
-                String selectedGrade = safe(entry.getSelectedGrade());
-                int hours = getChosenHours(entry);
-
-                CellStyle style = "III".equalsIgnoreCase(selectedGrade)
-                        ? yellowNumberStyle
-                        : blueNumberStyle;
-
-                createCell(row, col, hours, style);
+                String value = NumberOrZero(entry.getGradeIiiHours()) + "/" + NumberOrZero(entry.getGradeIvHours());
+                createCell(row, col, value, selectedStyle);
             }
 
             number++;
@@ -160,26 +152,19 @@ public class ExcelExporter {
         for (StudyPlan plan : plans) {
             Row row = sheet.createRow(rowIndex++);
 
-            int gradeThreeSubjects = 0;
-            int gradeFourSubjects = 0;
+            int selectedSubjects = plan.getSubjects() == null ? 0 : plan.getSubjects().size();
+            int gradeThreeSubjects = selectedSubjects;
+            int gradeFourSubjects = selectedSubjects;
+
             int gradeThreeHours = 0;
             int gradeFourHours = 0;
 
             if (plan.getSubjects() != null) {
                 for (SubjectEntry subject : plan.getSubjects()) {
-                    String selectedGrade = safe(subject.getSelectedGrade());
-
-                    if ("III".equalsIgnoreCase(selectedGrade)) {
-                        gradeThreeSubjects++;
-                        gradeThreeHours += NumberOrZero(subject.getGradeIiiHours());
-                    } else if ("IV".equalsIgnoreCase(selectedGrade)) {
-                        gradeFourSubjects++;
-                        gradeFourHours += NumberOrZero(subject.getGradeIvHours());
-                    }
+                    gradeThreeHours += NumberOrZero(subject.getGradeIiiHours());
+                    gradeFourHours += NumberOrZero(subject.getGradeIvHours());
                 }
             }
-
-            int selectedSubjects = plan.getSubjects() == null ? 0 : plan.getSubjects().size();
 
             createCell(row, 0, number++, normalStyle);
             createCell(row, 1, safe(plan.getFullName()), normalStyle);
@@ -241,9 +226,7 @@ public class ExcelExporter {
 
             if (plan.getSubjects() != null) {
                 for (SubjectEntry subject : plan.getSubjects()) {
-                    if (grade.equalsIgnoreCase(safe(subject.getSelectedGrade()))) {
-                        selectedSubjects.put(subject.getSubject(), subject);
-                    }
+                    selectedSubjects.put(subject.getSubject(), subject);
                 }
             }
 
@@ -258,7 +241,10 @@ public class ExcelExporter {
                 if (entry == null) {
                     createCell(row, col, "", normalStyle);
                 } else {
-                    int hours = getChosenHours(entry);
+                    int hours = "III".equalsIgnoreCase(grade)
+                            ? NumberOrZero(entry.getGradeIiiHours())
+                            : NumberOrZero(entry.getGradeIvHours());
+
                     total += hours;
                     createCell(row, col, hours, numberStyle);
                 }
@@ -303,7 +289,11 @@ public class ExcelExporter {
     private static List<String> getPreferredSubjectOrder() {
         return Arrays.asList(
                 "Lietuvių kalba ir literatūra",
+                "Lietuvių kalba ir literatūra A",
+                "Lietuvių kalba ir literatūra B",
                 "Matematika",
+                "Matematika A",
+                "Matematika B",
                 "Fizinis ugdymas",
                 "Tikyba",
                 "Etika",
@@ -341,7 +331,13 @@ public class ExcelExporter {
         Map<String, Short> colors = new HashMap<>();
 
         colors.put("Lietuvių kalba ir literatūra", IndexedColors.RED.getIndex());
+        colors.put("Lietuvių kalba ir literatūra A", IndexedColors.RED.getIndex());
+        colors.put("Lietuvių kalba ir literatūra B", IndexedColors.RED.getIndex());
+
         colors.put("Matematika", IndexedColors.YELLOW.getIndex());
+        colors.put("Matematika A", IndexedColors.YELLOW.getIndex());
+        colors.put("Matematika B", IndexedColors.YELLOW.getIndex());
+
         colors.put("Fizinis ugdymas", IndexedColors.TAN.getIndex());
 
         colors.put("Tikyba", IndexedColors.SKY_BLUE.getIndex());
@@ -385,19 +381,24 @@ public class ExcelExporter {
 
     private static void addLegend(Workbook workbook, Sheet sheet, int rowIndex) {
         CellStyle titleStyle = createBlueHeaderStyle(workbook);
+        CellStyle selectedStyle = createNumberStyleWithFill(workbook, IndexedColors.LIGHT_GREEN.getIndex());
         CellStyle gradeThreeStyle = createNumberStyleWithFill(workbook, IndexedColors.LIGHT_YELLOW.getIndex());
         CellStyle gradeFourStyle = createNumberStyleWithFill(workbook, IndexedColors.PALE_BLUE.getIndex());
 
         Row title = sheet.createRow(rowIndex);
         createCell(title, 1, "Legend", titleStyle);
 
-        Row gradeThree = sheet.createRow(rowIndex + 1);
-        createCell(gradeThree, 1, "Grade III selected", gradeThreeStyle);
-        createCell(gradeThree, 2, "Yellow cells", gradeThreeStyle);
+        Row selected = sheet.createRow(rowIndex + 1);
+        createCell(selected, 1, "Student Choices sheet", selectedStyle);
+        createCell(selected, 2, "Each selected subject shows Grade III / Grade IV hours", selectedStyle);
 
-        Row gradeFour = sheet.createRow(rowIndex + 2);
-        createCell(gradeFour, 1, "Grade IV selected", gradeFourStyle);
-        createCell(gradeFour, 2, "Blue cells", gradeFourStyle);
+        Row gradeThree = sheet.createRow(rowIndex + 2);
+        createCell(gradeThree, 1, "Grade III sheet", gradeThreeStyle);
+        createCell(gradeThree, 2, "Shows Grade III hours for selected subjects", gradeThreeStyle);
+
+        Row gradeFour = sheet.createRow(rowIndex + 3);
+        createCell(gradeFour, 1, "Grade IV sheet", gradeFourStyle);
+        createCell(gradeFour, 2, "Shows Grade IV hours for selected subjects", gradeFourStyle);
     }
 
     private static CellStyle createMetaHeaderStyle(Workbook workbook) {
@@ -519,24 +520,6 @@ public class ExcelExporter {
         Cell cell = row.createCell(col);
         cell.setCellValue(value);
         cell.setCellStyle(style);
-    }
-
-    private static int getChosenHours(SubjectEntry entry) {
-        String selectedGrade = safe(entry.getSelectedGrade());
-
-        if ("III".equalsIgnoreCase(selectedGrade)) {
-            return NumberOrZero(entry.getGradeIiiHours());
-        }
-
-        if ("IV".equalsIgnoreCase(selectedGrade)) {
-            return NumberOrZero(entry.getGradeIvHours());
-        }
-
-        if (NumberOrZero(entry.getGradeIiiHours()) > 0) {
-            return NumberOrZero(entry.getGradeIiiHours());
-        }
-
-        return NumberOrZero(entry.getGradeIvHours());
     }
 
     private static int NumberOrZero(Integer value) {
