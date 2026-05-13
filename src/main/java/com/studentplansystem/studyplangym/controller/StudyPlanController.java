@@ -126,7 +126,16 @@ public class StudyPlanController {
                     existingPlan.setFullName(updatedStudyPlan.getFullName());
                     existingPlan.setClassYear(updatedStudyPlan.getClassYear());
                     existingPlan.setSchoolYear(updatedStudyPlan.getSchoolYear());
-                    existingPlan.setSubjects(updatedStudyPlan.getSubjects());
+
+                    if (existingPlan.getSubjects() != null) {
+                        existingPlan.getSubjects().clear();
+
+                        if (updatedStudyPlan.getSubjects() != null) {
+                            existingPlan.getSubjects().addAll(updatedStudyPlan.getSubjects());
+                        }
+                    } else {
+                        existingPlan.setSubjects(updatedStudyPlan.getSubjects());
+                    }
 
                     existingPlan.setEditRequested(false);
                     existingPlan.setEditApproved(false);
