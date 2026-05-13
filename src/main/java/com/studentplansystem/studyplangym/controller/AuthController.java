@@ -12,7 +12,6 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/auth")
-
 public class AuthController {
 
     private final UserRepository userRepository;
@@ -23,8 +22,26 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest request) {
+        if (request.getUsername() == null || request.getUsername().isBlank()) {
+            return ResponseEntity.badRequest().body("Username is required");
+        }
+
+        if (request.getPassword() == null || request.getPassword().isBlank()) {
+            return ResponseEntity.badRequest().body("Password is required");
+        }
+
+        String username = request.getUsername().trim();
+
+        if (username.contains(" ")) {
+            return ResponseEntity.badRequest().body("Username cannot contain spaces");
+        }
+
+        if (username.length() > 20) {
+            return ResponseEntity.badRequest().body("Username cannot be more than 20 characters");
+        }
+
         Optional<User> user = userRepository.findByUsernameAndPassword(
-                request.getUsername(),
+                username,
                 request.getPassword()
         );
 
@@ -49,13 +66,36 @@ public class AuthController {
             return ResponseEntity.badRequest().body("Password is required");
         }
 
-        if (userRepository.existsByUsername(request.getUsername())) {
+        String username = request.getUsername().trim();
+        String password = request.getPassword();
+
+        if (username.contains(" ")) {
+            return ResponseEntity.badRequest().body("Username cannot contain spaces");
+        }
+
+        if (username.length() > 20) {
+            return ResponseEntity.badRequest().body("Username cannot be more than 20 characters");
+        }
+
+        if (password.length() < 8) {
+            return ResponseEntity.badRequest().body("Password must be at least 8 characters long");
+        }
+
+        if (!password.matches(".*[A-Z].*")) {
+            return ResponseEntity.badRequest().body("Password must contain at least one capital letter");
+        }
+
+        if (!password.matches(".*[^A-Za-z0-9].*")) {
+            return ResponseEntity.badRequest().body("Password must contain at least one special character");
+        }
+
+        if (userRepository.existsByUsername(username)) {
             return ResponseEntity.badRequest().body("Username already exists");
         }
 
         User newUser = new User();
-        newUser.setUsername(request.getUsername());
-        newUser.setPassword(request.getPassword());
+        newUser.setUsername(username);
+        newUser.setPassword(password);
         newUser.setRole("STUDENT");
 
         userRepository.save(newUser);
