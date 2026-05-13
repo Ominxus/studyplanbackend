@@ -35,6 +35,9 @@ public class StudyPlanController {
         }
 
         studyPlan.setStudentNumber(studentNumber);
+        studyPlan.setEditRequested(false);
+        studyPlan.setEditApproved(false);
+        studyPlan.setEditRequestStatus("NONE");
 
         StudyPlan savedPlan = repository.save(studyPlan);
         return ResponseEntity.ok(savedPlan);
@@ -43,6 +46,96 @@ public class StudyPlanController {
     @GetMapping
     public List<StudyPlan> getAllStudyPlans() {
         return repository.findAll();
+    }
+
+    @GetMapping("/student/{studentNumber}")
+    public ResponseEntity<?> getStudyPlanByStudentNumber(@PathVariable String studentNumber) {
+        return repository.findByStudentNumber(studentNumber.trim())
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    @GetMapping("/edit-requests")
+    public List<StudyPlan> getPendingEditRequests() {
+        return repository.findByEditRequestStatus("PENDING");
+    }
+
+    @PostMapping("/request-edit/{studentNumber}")
+    public ResponseEntity<?> requestEditPermission(@PathVariable String studentNumber) {
+        return repository.findByStudentNumber(studentNumber.trim())
+                .map(plan -> {
+                    if (plan.isEditApproved()) {
+                        return ResponseEntity.badRequest().body("Edit permission is already approved.");
+                    }
+
+                    if ("PENDING".equalsIgnoreCase(plan.getEditRequestStatus())) {
+                        return ResponseEntity.badRequest().body("Edit request is already pending.");
+                    }
+
+                    plan.setEditRequested(true);
+                    plan.setEditApproved(false);
+                    plan.setEditRequestStatus("PENDING");
+
+                    repository.save(plan);
+                    return ResponseEntity.ok("Edit request sent to admin.");
+                })
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    @PostMapping("/approve-edit/{id}")
+    public ResponseEntity<?> approveEditRequest(@PathVariable Long id) {
+        return repository.findById(id)
+                .map(plan -> {
+                    plan.setEditRequested(false);
+                    plan.setEditApproved(true);
+                    plan.setEditRequestStatus("APPROVED");
+
+                    repository.save(plan);
+                    return ResponseEntity.ok("Edit request approved.");
+                })
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    @PostMapping("/deny-edit/{id}")
+    public ResponseEntity<?> denyEditRequest(@PathVariable Long id) {
+        return repository.findById(id)
+                .map(plan -> {
+                    plan.setEditRequested(false);
+                    plan.setEditApproved(false);
+                    plan.setEditRequestStatus("DENIED");
+
+                    repository.save(plan);
+                    return ResponseEntity.ok("Edit request denied.");
+                })
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    @PutMapping("/update/{studentNumber}")
+    public ResponseEntity<?> updateStudyPlan(
+            @PathVariable String studentNumber,
+            @RequestBody StudyPlan updatedStudyPlan
+    ) {
+        return repository.findByStudentNumber(studentNumber.trim())
+                .map(existingPlan -> {
+                    if (!existingPlan.isEditApproved()) {
+                        return ResponseEntity
+                                .badRequest()
+                                .body("You are not allowed to edit this study plan yet. Please request admin permission.");
+                    }
+
+                    existingPlan.setFullName(updatedStudyPlan.getFullName());
+                    existingPlan.setClassYear(updatedStudyPlan.getClassYear());
+                    existingPlan.setSchoolYear(updatedStudyPlan.getSchoolYear());
+                    existingPlan.setSubjects(updatedStudyPlan.getSubjects());
+
+                    existingPlan.setEditRequested(false);
+                    existingPlan.setEditApproved(false);
+                    existingPlan.setEditRequestStatus("NONE");
+
+                    StudyPlan savedPlan = repository.save(existingPlan);
+                    return ResponseEntity.ok(savedPlan);
+                })
+                .orElse(ResponseEntity.notFound().build());
     }
 
     @DeleteMapping("/{id}")
