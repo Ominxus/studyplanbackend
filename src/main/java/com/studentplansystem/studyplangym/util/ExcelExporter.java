@@ -55,13 +55,15 @@ public class ExcelExporter {
 
         createCell(titleRow, 0, "No.", metaHeaderStyle);
         createCell(titleRow, 1, "Student Name", metaHeaderStyle);
-        createCell(titleRow, 2, "School Years", metaHeaderStyle);
+        createCell(titleRow, 2, "Class", metaHeaderStyle);
+        createCell(titleRow, 3, "School Years", metaHeaderStyle);
 
         createCell(filterRow, 0, "", metaHeaderStyle);
         createCell(filterRow, 1, "", metaHeaderStyle);
         createCell(filterRow, 2, "", metaHeaderStyle);
+        createCell(filterRow, 3, "", metaHeaderStyle);
 
-        int subjectStartCol = 3;
+        int subjectStartCol = 4;
 
         for (int i = 0; i < subjects.size(); i++) {
             String subjectName = subjects.get(i);
@@ -85,7 +87,8 @@ public class ExcelExporter {
 
             createCell(row, 0, formatStudentNumber(number), studentStyle);
             createCell(row, 1, safe(plan.getFullName()), studentStyle);
-            createCell(row, 2, safe(plan.getSchoolYear()), studentStyle);
+            createCell(row, 2, safe(plan.getClassYear()), studentStyle);
+            createCell(row, 3, safe(plan.getSchoolYear()), studentStyle);
 
             Map<String, SubjectEntry> selectedSubjects = new HashMap<>();
 
@@ -115,9 +118,10 @@ public class ExcelExporter {
 
         sheet.setColumnWidth(0, 1600);
         sheet.setColumnWidth(1, 7800);
-        sheet.setColumnWidth(2, 3600);
+        sheet.setColumnWidth(2, 2200);
+        sheet.setColumnWidth(3, 3600);
 
-        sheet.createFreezePane(3, 2);
+        sheet.createFreezePane(4, 2);
         sheet.setAutoFilter(new CellRangeAddress(1, Math.max(1, rowIndex - 1), 0, subjectStartCol + subjects.size() - 1));
 
         addLegend(workbook, sheet, rowIndex + 2);
@@ -133,6 +137,7 @@ public class ExcelExporter {
                 "No.",
                 "Student Name",
                 "Student Number",
+                "Class",
                 "School Years",
                 "Selected Subjects",
                 "Grade III Subjects",
@@ -169,13 +174,14 @@ public class ExcelExporter {
             createCell(row, 0, number++, normalStyle);
             createCell(row, 1, safe(plan.getFullName()), normalStyle);
             createCell(row, 2, safe(plan.getStudentNumber()), normalStyle);
-            createCell(row, 3, safe(plan.getSchoolYear()), normalStyle);
-            createCell(row, 4, selectedSubjects, normalStyle);
-            createCell(row, 5, gradeThreeSubjects, normalStyle);
-            createCell(row, 6, gradeThreeHours, normalStyle);
-            createCell(row, 7, gradeFourSubjects, normalStyle);
-            createCell(row, 8, gradeFourHours, normalStyle);
-            createCell(row, 9, gradeThreeHours + gradeFourHours, normalStyle);
+            createCell(row, 3, safe(plan.getClassYear()), normalStyle);
+            createCell(row, 4, safe(plan.getSchoolYear()), normalStyle);
+            createCell(row, 5, selectedSubjects, normalStyle);
+            createCell(row, 6, gradeThreeSubjects, normalStyle);
+            createCell(row, 7, gradeThreeHours, normalStyle);
+            createCell(row, 8, gradeFourSubjects, normalStyle);
+            createCell(row, 9, gradeFourHours, normalStyle);
+            createCell(row, 10, gradeThreeHours + gradeFourHours, normalStyle);
         }
 
         autoSizeColumns(sheet, headers.length);
@@ -201,9 +207,10 @@ public class ExcelExporter {
         createCell(header, 0, "No.", headerStyle);
         createCell(header, 1, "Student Name", headerStyle);
         createCell(header, 2, "Student Number", headerStyle);
-        createCell(header, 3, "School Years", headerStyle);
+        createCell(header, 3, "Class", headerStyle);
+        createCell(header, 4, "School Years", headerStyle);
 
-        int subjectStartCol = 4;
+        int subjectStartCol = 5;
 
         for (int i = 0; i < subjects.size(); i++) {
             createCell(header, subjectStartCol + i, subjects.get(i), headerStyle);
@@ -220,7 +227,8 @@ public class ExcelExporter {
             createCell(row, 0, number++, normalStyle);
             createCell(row, 1, safe(plan.getFullName()), normalStyle);
             createCell(row, 2, safe(plan.getStudentNumber()), normalStyle);
-            createCell(row, 3, safe(plan.getSchoolYear()), normalStyle);
+            createCell(row, 3, safe(plan.getClassYear()), normalStyle);
+            createCell(row, 4, safe(plan.getSchoolYear()), normalStyle);
 
             Map<String, SubjectEntry> selectedSubjects = new HashMap<>();
 
@@ -254,7 +262,7 @@ public class ExcelExporter {
         }
 
         autoSizeColumns(sheet, subjectStartCol + subjects.size() + 1);
-        sheet.createFreezePane(4, 1);
+        sheet.createFreezePane(5, 1);
         sheet.setAutoFilter(new CellRangeAddress(0, Math.max(0, rowIndex - 1), 0, subjectStartCol + subjects.size()));
     }
 
