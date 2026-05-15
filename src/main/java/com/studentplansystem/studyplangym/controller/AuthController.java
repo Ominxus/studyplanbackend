@@ -6,6 +6,7 @@ import com.studentplansystem.studyplangym.dto.RegisterRequest;
 import com.studentplansystem.studyplangym.entity.User;
 import com.studentplansystem.studyplangym.repository.UserRepository;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Optional;
@@ -15,9 +16,11 @@ import java.util.Optional;
 public class AuthController {
 
     private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
 
-    public AuthController(UserRepository userRepository) {
+    public AuthController(UserRepository userRepository, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @PostMapping("/login")
@@ -31,6 +34,7 @@ public class AuthController {
         }
 
         String username = request.getUsername().trim();
+        String rawPassword = request.getPassword();
 
         if (username.contains(" ")) {
             return ResponseEntity.badRequest().body("Username cannot contain spaces");
@@ -40,16 +44,31 @@ public class AuthController {
             return ResponseEntity.badRequest().body("Username cannot be more than 20 characters");
         }
 
-        Optional<User> user = userRepository.findByUsernameAndPassword(
-                username,
-                request.getPassword()
-        );
+        Optional<User> user = userRepository.findByUsername(username);
 
         if (user.isEmpty()) {
             return ResponseEntity.status(401).body("Invalid username or password");
         }
 
         User foundUser = user.get();
+        String storedPassword = foundUser.getPassword();
+
+        boolean passwordMatches;
+
+        if (isBCryptHash(storedPassword)) {
+            passwordMatches = passwordEncoder.matches(rawPassword, storedPassword);
+        } else {
+            passwordMatches = rawPassword.equals(storedPassword);
+
+            if (passwordMatches) {
+                foundUser.setPassword(passwordEncoder.encode(rawPassword));
+                userRepository.save(foundUser);
+            }
+        }
+
+        if (!passwordMatches) {
+            return ResponseEntity.status(401).body("Invalid username or password");
+        }
 
         return ResponseEntity.ok(
                 new LoginResponse(foundUser.getUsername(), foundUser.getRole())
@@ -95,7 +114,7 @@ public class AuthController {
 
         User newUser = new User();
         newUser.setUsername(username);
-        newUser.setPassword(password);
+        newUser.setPassword(passwordEncoder.encode(password));
         newUser.setRole("STUDENT");
 
         userRepository.save(newUser);
@@ -103,5 +122,12 @@ public class AuthController {
         return ResponseEntity.ok(
                 new LoginResponse(newUser.getUsername(), newUser.getRole())
         );
+    }
+
+    private boolean isBCryptHash(String password) {
+        return password != null &&
+                (password.startsWith("$2a$") ||
+                        password.startsWith("$2b$") ||
+                        password.startsWith("$2y$"));
     }
 }
