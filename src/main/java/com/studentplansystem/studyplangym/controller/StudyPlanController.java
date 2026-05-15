@@ -5,6 +5,7 @@ import com.studentplansystem.studyplangym.repository.StudyPlanRepository;
 import com.studentplansystem.studyplangym.util.ExcelExporter;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
@@ -21,12 +22,21 @@ public class StudyPlanController {
     }
 
     @PostMapping
-    public ResponseEntity<?> createStudyPlan(@RequestBody StudyPlan studyPlan) {
+    public ResponseEntity<?> createStudyPlan(
+            @RequestBody StudyPlan studyPlan,
+            Authentication authentication
+    ) {
+        String loggedInUsername = authentication.getName();
+
         if (studyPlan.getStudentNumber() == null || studyPlan.getStudentNumber().trim().isEmpty()) {
             return ResponseEntity.badRequest().body("Student number is required.");
         }
 
         String studentNumber = studyPlan.getStudentNumber().trim();
+
+        if (!studentNumber.equals(loggedInUsername)) {
+            return ResponseEntity.status(403).body("You can only submit a study plan for your own student number.");
+        }
 
         if (repository.existsByStudentNumber(studentNumber)) {
             return ResponseEntity
@@ -49,8 +59,17 @@ public class StudyPlanController {
     }
 
     @GetMapping("/student/{studentNumber}")
-    public ResponseEntity<?> getStudyPlanByStudentNumber(@PathVariable String studentNumber) {
-        return repository.findByStudentNumber(studentNumber.trim())
+    public ResponseEntity<?> getStudyPlanByStudentNumber(
+            @PathVariable String studentNumber,
+            Authentication authentication
+    ) {
+        String requestedStudentNumber = studentNumber.trim();
+
+        if (isStudent(authentication) && !requestedStudentNumber.equals(authentication.getName())) {
+            return ResponseEntity.status(403).body("You can only view your own study plan.");
+        }
+
+        return repository.findByStudentNumber(requestedStudentNumber)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
@@ -61,8 +80,17 @@ public class StudyPlanController {
     }
 
     @PostMapping("/request-edit/{studentNumber}")
-    public ResponseEntity<?> requestEditPermission(@PathVariable String studentNumber) {
-        return repository.findByStudentNumber(studentNumber.trim())
+    public ResponseEntity<?> requestEditPermission(
+            @PathVariable String studentNumber,
+            Authentication authentication
+    ) {
+        String requestedStudentNumber = studentNumber.trim();
+
+        if (!requestedStudentNumber.equals(authentication.getName())) {
+            return ResponseEntity.status(403).body("You can only request editing for your own study plan.");
+        }
+
+        return repository.findByStudentNumber(requestedStudentNumber)
                 .map(plan -> {
                     if (plan.isEditApproved()) {
                         return ResponseEntity.badRequest().body("Edit permission is already approved.");
@@ -113,9 +141,16 @@ public class StudyPlanController {
     @PutMapping("/update/{studentNumber}")
     public ResponseEntity<?> updateStudyPlan(
             @PathVariable String studentNumber,
-            @RequestBody StudyPlan updatedStudyPlan
+            @RequestBody StudyPlan updatedStudyPlan,
+            Authentication authentication
     ) {
-        return repository.findByStudentNumber(studentNumber.trim())
+        String requestedStudentNumber = studentNumber.trim();
+
+        if (!requestedStudentNumber.equals(authentication.getName())) {
+            return ResponseEntity.status(403).body("You can only update your own study plan.");
+        }
+
+        return repository.findByStudentNumber(requestedStudentNumber)
                 .map(existingPlan -> {
                     if (!existingPlan.isEditApproved()) {
                         return ResponseEntity
@@ -166,5 +201,10 @@ public class StudyPlanController {
         );
 
         ExcelExporter.exportNewFormat(repository.findAll(), response);
+    }
+
+    private boolean isStudent(Authentication authentication) {
+        return authentication.getAuthorities().stream()
+                .anyMatch(authority -> authority.getAuthority().equals("ROLE_STUDENT"));
     }
 }

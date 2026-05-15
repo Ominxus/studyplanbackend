@@ -5,6 +5,7 @@ import com.studentplansystem.studyplangym.dto.LoginResponse;
 import com.studentplansystem.studyplangym.dto.RegisterRequest;
 import com.studentplansystem.studyplangym.entity.User;
 import com.studentplansystem.studyplangym.repository.UserRepository;
+import com.studentplansystem.studyplangym.security.JwtUtil;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
@@ -17,10 +18,16 @@ public class AuthController {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final JwtUtil jwtUtil;
 
-    public AuthController(UserRepository userRepository, PasswordEncoder passwordEncoder) {
+    public AuthController(
+            UserRepository userRepository,
+            PasswordEncoder passwordEncoder,
+            JwtUtil jwtUtil
+    ) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
+        this.jwtUtil = jwtUtil;
     }
 
     @PostMapping("/login")
@@ -70,8 +77,10 @@ public class AuthController {
             return ResponseEntity.status(401).body("Invalid username or password");
         }
 
+        String token = jwtUtil.generateToken(foundUser.getUsername(), foundUser.getRole());
+
         return ResponseEntity.ok(
-                new LoginResponse(foundUser.getUsername(), foundUser.getRole())
+                new LoginResponse(foundUser.getUsername(), foundUser.getRole(), token)
         );
     }
 
@@ -119,8 +128,10 @@ public class AuthController {
 
         userRepository.save(newUser);
 
+        String token = jwtUtil.generateToken(newUser.getUsername(), newUser.getRole());
+
         return ResponseEntity.ok(
-                new LoginResponse(newUser.getUsername(), newUser.getRole())
+                new LoginResponse(newUser.getUsername(), newUser.getRole(), token)
         );
     }
 
