@@ -5,7 +5,7 @@ import com.studentplansystem.studyplangym.dto.LoginResponse;
 import com.studentplansystem.studyplangym.dto.RegisterRequest;
 import com.studentplansystem.studyplangym.entity.User;
 import com.studentplansystem.studyplangym.repository.UserRepository;
-import com.studentplansystem.studyplangym.security.JwtUtil;
+import com.studentplansystem.studyplangym.util.JwtUtil;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;

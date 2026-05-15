@@ -1,6 +1,6 @@
 package com.studentplansystem.studyplangym.config;
 
-import com.studentplansystem.studyplangym.security.JwtAuthenticationFilter;
+import com.studentplansystem.studyplangym.util.JwtAuthenticationFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
