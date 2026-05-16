@@ -6,6 +6,7 @@ import com.studentplansystem.studyplangym.entity.SubjectEntry;
 import com.studentplansystem.studyplangym.entity.SubjectOption;
 import com.studentplansystem.studyplangym.repository.CategoryRepository;
 import com.studentplansystem.studyplangym.repository.StudyPlanRepository;
+import com.studentplansystem.studyplangym.service.AuditLogService;
 import com.studentplansystem.studyplangym.util.ExcelExporter;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.http.ResponseEntity;
@@ -21,13 +22,16 @@ public class StudyPlanController {
 
     private final StudyPlanRepository repository;
     private final CategoryRepository categoryRepository;
+    private final AuditLogService auditLogService;
 
     public StudyPlanController(
             StudyPlanRepository repository,
-            CategoryRepository categoryRepository
+            CategoryRepository categoryRepository,
+            AuditLogService auditLogService
     ) {
         this.repository = repository;
         this.categoryRepository = categoryRepository;
+        this.auditLogService = auditLogService;
     }
 
     @PostMapping
@@ -126,7 +130,10 @@ public class StudyPlanController {
     }
 
     @PostMapping("/approve-edit/{id}")
-    public ResponseEntity<?> approveEditRequest(@PathVariable Long id) {
+    public ResponseEntity<?> approveEditRequest(
+            @PathVariable Long id,
+            Authentication authentication
+    ) {
         return repository.findById(id)
                 .map(plan -> {
                     plan.setEditRequested(false);
@@ -134,13 +141,23 @@ public class StudyPlanController {
                     plan.setEditRequestStatus("APPROVED");
 
                     repository.save(plan);
+
+                    auditLogService.log(
+                            authentication,
+                            "APPROVE_EDIT_REQUEST",
+                            "Approved edit request for student: " + plan.getStudentNumber()
+                    );
+
                     return ResponseEntity.ok("Edit request approved.");
                 })
                 .orElse(ResponseEntity.notFound().build());
     }
 
     @PostMapping("/deny-edit/{id}")
-    public ResponseEntity<?> denyEditRequest(@PathVariable Long id) {
+    public ResponseEntity<?> denyEditRequest(
+            @PathVariable Long id,
+            Authentication authentication
+    ) {
         return repository.findById(id)
                 .map(plan -> {
                     plan.setEditRequested(false);
@@ -148,6 +165,13 @@ public class StudyPlanController {
                     plan.setEditRequestStatus("DENIED");
 
                     repository.save(plan);
+
+                    auditLogService.log(
+                            authentication,
+                            "DENY_EDIT_REQUEST",
+                            "Denied edit request for student: " + plan.getStudentNumber()
+                    );
+
                     return ResponseEntity.ok("Edit request denied.");
                 })
                 .orElse(ResponseEntity.notFound().build());
@@ -204,21 +228,45 @@ public class StudyPlanController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> deleteStudyPlan(@PathVariable Long id) {
-        if (!repository.existsById(id)) {
+    public ResponseEntity<?> deleteStudyPlan(
+            @PathVariable Long id,
+            Authentication authentication
+    ) {
+        Optional<StudyPlan> plan = repository.findById(id);
+
+        if (plan.isEmpty()) {
             return ResponseEntity.notFound().build();
         }
 
+        String studentNumber = plan.get().getStudentNumber();
+        String fullName = plan.get().getFullName();
+
         repository.deleteById(id);
+
+        auditLogService.log(
+                authentication,
+                "DELETE_STUDY_PLAN",
+                "Deleted study plan for " + fullName + " (" + studentNumber + ")"
+        );
+
         return ResponseEntity.ok().build();
     }
 
     @GetMapping("/export")
-    public void export(HttpServletResponse response) throws IOException {
+    public void export(
+            HttpServletResponse response,
+            Authentication authentication
+    ) throws IOException {
         response.setContentType("application/octet-stream");
         response.setHeader(
                 "Content-Disposition",
                 "attachment; filename=studyplans.xlsx"
+        );
+
+        auditLogService.log(
+                authentication,
+                "EXPORT_EXCEL",
+                "Exported study plans to Excel"
         );
 
         ExcelExporter.exportNewFormat(repository.findAll(), response);
@@ -251,7 +299,9 @@ public class StudyPlanController {
         Map<String, String> subjectGroupByName = new HashMap<>();
 
         for (Category category : categories) {
-            if (category.getSubjects() == null) continue;
+            if (category.getSubjects() == null) {
+                continue;
+            }
 
             for (SubjectOption option : category.getSubjects()) {
                 allowedSubjectsByName.put(option.getName(), option);
@@ -300,6 +350,7 @@ public class StudyPlanController {
             }
 
             String categoryName = subjectCategoryByName.get(subjectName);
+
             selectedCountByCategory.put(
                     categoryName,
                     selectedCountByCategory.getOrDefault(categoryName, 0) + 1
