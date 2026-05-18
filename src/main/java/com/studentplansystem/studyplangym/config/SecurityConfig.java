@@ -54,6 +54,9 @@ public class SecurityConfig {
 
                         .requestMatchers("/api/auth/**").permitAll()
 
+                        .requestMatchers(HttpMethod.GET, "/api/maintenance/status").hasAnyRole("STUDENT", "ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/maintenance/status").hasRole("ADMIN")
+
                         .requestMatchers(HttpMethod.GET, "/api/audit-logs").hasRole("ADMIN")
 
                         .requestMatchers(HttpMethod.GET, "/api/config/categories").hasAnyRole("STUDENT", "ADMIN")

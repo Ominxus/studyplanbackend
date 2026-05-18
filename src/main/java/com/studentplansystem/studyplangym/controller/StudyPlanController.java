@@ -12,6 +12,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+import com.studentplansystem.studyplangym.service.MaintenanceService;
 
 import java.io.IOException;
 import java.util.*;
@@ -23,15 +24,18 @@ public class StudyPlanController {
     private final StudyPlanRepository repository;
     private final CategoryRepository categoryRepository;
     private final AuditLogService auditLogService;
+    private final MaintenanceService maintenanceService;
 
     public StudyPlanController(
             StudyPlanRepository repository,
             CategoryRepository categoryRepository,
-            AuditLogService auditLogService
+            AuditLogService auditLogService,
+            MaintenanceService maintenanceService
     ) {
         this.repository = repository;
         this.categoryRepository = categoryRepository;
         this.auditLogService = auditLogService;
+        this.maintenanceService = maintenanceService;
     }
 
     @PostMapping
@@ -39,6 +43,10 @@ public class StudyPlanController {
             @RequestBody StudyPlan studyPlan,
             Authentication authentication
     ) {
+        ResponseEntity<?> maintenanceBlock = blockIfMaintenanceEnabled();
+        if (maintenanceBlock != null) {
+            return maintenanceBlock;
+        }
         String loggedInUsername = authentication.getName();
 
         if (studyPlan.getStudentNumber() == null || studyPlan.getStudentNumber().trim().isEmpty()) {
@@ -103,6 +111,10 @@ public class StudyPlanController {
             @PathVariable String studentNumber,
             Authentication authentication
     ) {
+        ResponseEntity<?> maintenanceBlock = blockIfMaintenanceEnabled();
+        if (maintenanceBlock != null) {
+            return maintenanceBlock;
+        }
         String requestedStudentNumber = studentNumber.trim();
 
         if (!requestedStudentNumber.equals(authentication.getName())) {
@@ -183,6 +195,10 @@ public class StudyPlanController {
             @RequestBody StudyPlan updatedStudyPlan,
             Authentication authentication
     ) {
+        ResponseEntity<?> maintenanceBlock = blockIfMaintenanceEnabled();
+        if (maintenanceBlock != null) {
+            return maintenanceBlock;
+        }
         String requestedStudentNumber = studentNumber.trim();
 
         if (!requestedStudentNumber.equals(authentication.getName())) {
@@ -417,6 +433,15 @@ public class StudyPlanController {
                         subjectName.contains("lietuviu kalba")
         ) {
             return "lietuviu";
+        }
+
+        return null;
+    }
+    private ResponseEntity<?> blockIfMaintenanceEnabled() {
+        if (maintenanceService.isMaintenanceEnabled()) {
+            return ResponseEntity
+                    .status(503)
+                    .body("Website is under maintenance. Please come back later.");
         }
 
         return null;
