@@ -276,7 +276,7 @@ public class StudyPlanController {
         response.setContentType("application/octet-stream");
         response.setHeader(
                 "Content-Disposition",
-                "attachment; filename=studyplans.xlsx"
+                "attachment; filename=ugdymo_planai.xlsx"
         );
 
         auditLogService.log(

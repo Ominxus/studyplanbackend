@@ -16,10 +16,10 @@ public class ExcelExporter {
     public static void exportNewFormat(List<StudyPlan> plans, HttpServletResponse response) throws IOException {
         Workbook workbook = new XSSFWorkbook();
 
-        Sheet matrixSheet = workbook.createSheet("Student Choices");
-        Sheet generalSheet = workbook.createSheet("General Data");
-        Sheet gradeThreeSheet = workbook.createSheet("Grade III");
-        Sheet gradeFourSheet = workbook.createSheet("Grade IV");
+        Sheet matrixSheet = workbook.createSheet("Mokinių pasirinkimai");
+        Sheet generalSheet = workbook.createSheet("Bendra informacija");
+        Sheet gradeThreeSheet = workbook.createSheet("III klasė");
+        Sheet gradeFourSheet = workbook.createSheet("IV klasė");
 
         Map<String, Short> subjectColors = createSubjectColors();
         List<String> subjects = getAllSubjects(plans);
@@ -53,10 +53,10 @@ public class ExcelExporter {
         Row filterRow = sheet.createRow(1);
         filterRow.setHeightInPoints(20);
 
-        createCell(titleRow, 0, "No.", metaHeaderStyle);
-        createCell(titleRow, 1, "Student Name", metaHeaderStyle);
-        createCell(titleRow, 2, "Class", metaHeaderStyle);
-        createCell(titleRow, 3, "School Years", metaHeaderStyle);
+        createCell(titleRow, 0, "Nr.", metaHeaderStyle);
+        createCell(titleRow, 1, "Mokinio vardas ir pavardė", metaHeaderStyle);
+        createCell(titleRow, 2, "Klasė", metaHeaderStyle);
+        createCell(titleRow, 3, "Mokslo metai", metaHeaderStyle);
 
         createCell(filterRow, 0, "", metaHeaderStyle);
         createCell(filterRow, 1, "", metaHeaderStyle);
@@ -134,17 +134,17 @@ public class ExcelExporter {
         Row header = sheet.createRow(0);
 
         String[] headers = {
-                "No.",
-                "Student Name",
-                "Student Number",
-                "Class",
-                "School Years",
-                "Selected Subjects",
-                "Grade III Subjects",
-                "Grade III Hours",
-                "Grade IV Subjects",
-                "Grade IV Hours",
-                "Total Hours"
+                "Nr.",
+                "Mokinio vardas ir pavardė",
+                "Mokinio numeris",
+                "Klasė",
+                "Mokslo metai",
+                "Pasirinkti dalykai",
+                "III klasės dalykai",
+                "III klasės valandos",
+                "IV klasės dalykai",
+                "IV klasės valandos",
+                "Iš viso valandų"
         };
 
         for (int i = 0; i < headers.length; i++) {
@@ -204,11 +204,11 @@ public class ExcelExporter {
 
         Row header = sheet.createRow(0);
 
-        createCell(header, 0, "No.", headerStyle);
-        createCell(header, 1, "Student Name", headerStyle);
-        createCell(header, 2, "Student Number", headerStyle);
-        createCell(header, 3, "Class", headerStyle);
-        createCell(header, 4, "School Years", headerStyle);
+        createCell(header, 0, "Nr.", headerStyle);
+        createCell(header, 1, "Mokinio vardas ir pavardė", headerStyle);
+        createCell(header, 2, "Mokinio numeris", headerStyle);
+        createCell(header, 3, "Klasė", headerStyle);
+        createCell(header, 4, "Mokslo metai", headerStyle);
 
         int subjectStartCol = 5;
 
@@ -216,7 +216,7 @@ public class ExcelExporter {
             createCell(header, subjectStartCol + i, subjects.get(i), headerStyle);
         }
 
-        createCell(header, subjectStartCol + subjects.size(), "Total Hours", headerStyle);
+        createCell(header, subjectStartCol + subjects.size(), "Iš viso valandų", headerStyle);
 
         int rowIndex = 1;
         int number = 1;
@@ -394,19 +394,19 @@ public class ExcelExporter {
         CellStyle gradeFourStyle = createNumberStyleWithFill(workbook, IndexedColors.PALE_BLUE.getIndex());
 
         Row title = sheet.createRow(rowIndex);
-        createCell(title, 1, "Legend", titleStyle);
+        createCell(title, 1, "Paaiškinimas", titleStyle);
 
         Row selected = sheet.createRow(rowIndex + 1);
-        createCell(selected, 1, "Student Choices sheet", selectedStyle);
-        createCell(selected, 2, "Each selected subject shows Grade III / Grade IV hours", selectedStyle);
+        createCell(selected, 1, "Mokinių pasirinkimų lapas", selectedStyle);
+        createCell(selected, 2, "Kiekvienas pasirinktas dalykas rodo III / IV klasės valandas", selectedStyle);
 
         Row gradeThree = sheet.createRow(rowIndex + 2);
-        createCell(gradeThree, 1, "Grade III sheet", gradeThreeStyle);
-        createCell(gradeThree, 2, "Shows Grade III hours for selected subjects", gradeThreeStyle);
+        createCell(gradeThree, 1, "III klasės lapas", gradeThreeStyle);
+        createCell(gradeThree, 2, "Rodo pasirinktų dalykų III klasės valandas", gradeThreeStyle);
 
         Row gradeFour = sheet.createRow(rowIndex + 3);
-        createCell(gradeFour, 1, "Grade IV sheet", gradeFourStyle);
-        createCell(gradeFour, 2, "Shows Grade IV hours for selected subjects", gradeFourStyle);
+        createCell(gradeFour, 1, "IV klasės lapas", gradeFourStyle);
+        createCell(gradeFour, 2, "Rodo pasirinktų dalykų IV klasės valandas", gradeFourStyle);
     }
 
     private static CellStyle createMetaHeaderStyle(Workbook workbook) {
