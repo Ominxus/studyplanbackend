@@ -54,6 +54,11 @@ public class SecurityConfig {
 
                         .requestMatchers("/api/auth/**").permitAll()
 
+                        .requestMatchers(HttpMethod.POST, "/api/password-reset/request").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/password-reset/requests").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/api/password-reset/complete/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/api/password-reset/deny/**").hasRole("ADMIN")
+
                         .requestMatchers(HttpMethod.GET, "/api/maintenance/status").hasAnyRole("STUDENT", "ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/api/maintenance/status").hasRole("ADMIN")
 
