@@ -95,6 +95,7 @@ public class AuthController {
         }
 
         String username = request.getUsername().trim();
+        String email = request.getEmail().trim();
         String password = request.getPassword();
 
         if (username.contains(" ")) {
@@ -116,13 +117,23 @@ public class AuthController {
         if (!password.matches(".*[^A-Za-z0-9].*")) {
             return ResponseEntity.badRequest().body("Password must contain at least one special character");
         }
+        if (request.getEmail() == null || request.getEmail().isBlank()) {
+            return ResponseEntity.badRequest().body("Email is required");
+        }
+        if (!email.matches("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$")) {
+            return ResponseEntity.badRequest().body("Enter a valid email address");
+        }
 
+        if (userRepository.existsByEmail(email)) {
+            return ResponseEntity.badRequest().body("Email already exists");
+        }
         if (userRepository.existsByUsername(username)) {
             return ResponseEntity.badRequest().body("Username already exists");
         }
 
         User newUser = new User();
         newUser.setUsername(username);
+        newUser.setEmail(email);
         newUser.setPassword(passwordEncoder.encode(password));
         newUser.setRole("STUDENT");
 
