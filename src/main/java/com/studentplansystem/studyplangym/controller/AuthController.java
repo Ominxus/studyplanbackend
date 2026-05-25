@@ -80,7 +80,7 @@ public class AuthController {
         String token = jwtUtil.generateToken(foundUser.getUsername(), foundUser.getRole());
 
         return ResponseEntity.ok(
-                new LoginResponse(foundUser.getUsername(), foundUser.getRole(), token)
+                new LoginResponse(foundUser.getUsername(), foundUser.getRole(), token,foundUser.isMustChangePassword())
         );
     }
 
@@ -131,7 +131,7 @@ public class AuthController {
         String token = jwtUtil.generateToken(newUser.getUsername(), newUser.getRole());
 
         return ResponseEntity.ok(
-                new LoginResponse(newUser.getUsername(), newUser.getRole(), token)
+                new LoginResponse(newUser.getUsername(), newUser.getRole(), token, newUser.isMustChangePassword())
         );
     }
 
