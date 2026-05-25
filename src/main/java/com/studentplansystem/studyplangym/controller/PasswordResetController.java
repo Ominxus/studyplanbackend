@@ -9,6 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
+import com.studentplansystem.studyplangym.service.EmailService;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -24,17 +25,20 @@ public class PasswordResetController {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final AuditLogService auditLogService;
+    private final EmailService emailService;
 
     public PasswordResetController(
             PasswordResetRequestRepository passwordResetRequestRepository,
             UserRepository userRepository,
             PasswordEncoder passwordEncoder,
-            AuditLogService auditLogService
+            AuditLogService auditLogService,
+            EmailService emailService
     ) {
         this.passwordResetRequestRepository = passwordResetRequestRepository;
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.auditLogService = auditLogService;
+        this.emailService=emailService;
     }
 
     @PostMapping("/request")
@@ -112,20 +116,32 @@ public class PasswordResetController {
         }
 
         User user = userOptional.get();
+
+        if (user.getEmail() == null || user.getEmail().trim().isEmpty()) {
+            return ResponseEntity.badRequest().body("This user does not have an email address.");
+        }
+
         user.setPassword(passwordEncoder.encode(newPassword));
+        user.setMustChangePassword(true);
         userRepository.save(user);
 
         resetRequest.setStatus("COMPLETED");
         resetRequest.setCompletedAt(LocalDateTime.now());
         passwordResetRequestRepository.save(resetRequest);
 
+        emailService.sendTemporaryPasswordEmail(
+                user.getEmail(),
+                user.getUsername(),
+                newPassword
+        );
+
         auditLogService.log(
                 authentication,
                 "PASSWORD_RESET",
-                "Reset password for user: " + user.getUsername()
+                "Reset password and emailed temporary password for user: " + user.getUsername()
         );
 
-        return ResponseEntity.ok("Password reset completed.");
+        return ResponseEntity.ok("Password reset completed and temporary password was emailed to the student.");
     }
 
     @PostMapping("/deny/{requestId}")

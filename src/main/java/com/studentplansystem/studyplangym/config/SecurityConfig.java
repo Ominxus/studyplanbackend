@@ -80,6 +80,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/studyplans/request-edit/**").hasRole("STUDENT")
                         .requestMatchers(HttpMethod.PUT, "/api/studyplans/update/**").hasRole("STUDENT")
 
+                        .requestMatchers(HttpMethod.POST, "/api/change-password").hasAnyRole("STUDENT", "ADMIN")
+
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);

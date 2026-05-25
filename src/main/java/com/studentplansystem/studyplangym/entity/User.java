@@ -19,7 +19,7 @@ public class User {
     private String password;
     private String role;
 
-    private boolean emailVerified = false;
+    private boolean mustChangePassword = false;
 
     public Long getId() {
         return id;
@@ -41,8 +41,8 @@ public class User {
         return role;
     }
 
-    public boolean isEmailVerified() {
-        return emailVerified;
+    public boolean isMustChangePassword() {
+        return mustChangePassword;
     }
 
     public void setUsername(String username) {
@@ -61,7 +61,7 @@ public class User {
         this.role = role;
     }
 
-    public void setEmailVerified(boolean emailVerified) {
-        this.emailVerified = emailVerified;
+    public void setMustChangePassword(boolean mustChangePassword) {
+        this.mustChangePassword = mustChangePassword;
     }
 }
