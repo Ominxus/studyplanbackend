@@ -9,7 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
-import com.studentplansystem.studyplangym.service.EmailService;
+import com.studentplansystem.studyplangym.dto.PasswordResetRequestResponse;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -25,20 +25,17 @@ public class PasswordResetController {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final AuditLogService auditLogService;
-    private final EmailService emailService;
 
     public PasswordResetController(
             PasswordResetRequestRepository passwordResetRequestRepository,
             UserRepository userRepository,
             PasswordEncoder passwordEncoder,
-            AuditLogService auditLogService,
-            EmailService emailService
+            AuditLogService auditLogService
     ) {
         this.passwordResetRequestRepository = passwordResetRequestRepository;
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.auditLogService = auditLogService;
-        this.emailService=emailService;
     }
 
     @PostMapping("/request")
@@ -74,8 +71,30 @@ public class PasswordResetController {
     }
 
     @GetMapping("/requests")
-    public List<PasswordResetRequest> getPendingRequests() {
-        return passwordResetRequestRepository.findByStatusOrderByRequestedAtDesc("PENDING");
+    public List<PasswordResetRequestResponse> getPendingRequests() {
+        List<PasswordResetRequest> requests =
+                passwordResetRequestRepository.findByStatusOrderByRequestedAtDesc("PENDING");
+
+        List<PasswordResetRequestResponse> response = new ArrayList<>();
+
+        for (PasswordResetRequest request : requests) {
+            String email = userRepository.findByUsername(request.getUsername())
+                    .map(User::getEmail)
+                    .orElse("");
+
+            response.add(
+                    new PasswordResetRequestResponse(
+                            request.getId(),
+                            request.getUsername(),
+                            email,
+                            request.getStatus(),
+                            request.getRequestedAt(),
+                            request.getCompletedAt()
+                    )
+            );
+        }
+
+        return response;
     }
 
     @PostMapping("/complete/{requestId}")
@@ -117,10 +136,6 @@ public class PasswordResetController {
 
         User user = userOptional.get();
 
-        if (user.getEmail() == null || user.getEmail().trim().isEmpty()) {
-            return ResponseEntity.badRequest().body("This user does not have an email address.");
-        }
-
         user.setPassword(passwordEncoder.encode(newPassword));
         user.setMustChangePassword(true);
         userRepository.save(user);
@@ -129,16 +144,10 @@ public class PasswordResetController {
         resetRequest.setCompletedAt(LocalDateTime.now());
         passwordResetRequestRepository.save(resetRequest);
 
-        emailService.sendTemporaryPasswordEmail(
-                user.getEmail(),
-                user.getUsername(),
-                newPassword
-        );
-
         auditLogService.log(
                 authentication,
                 "PASSWORD_RESET",
-                "Reset password and emailed temporary password for user: " + user.getUsername()
+                "Reset temporary password for user: " + user.getUsername()
         );
 
         return ResponseEntity.ok("Password reset completed and temporary password was emailed to the student.");
