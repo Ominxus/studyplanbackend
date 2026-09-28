@@ -81,6 +81,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.PUT, "/api/studyplans/update/**").hasRole("STUDENT")
 
                         .requestMatchers(HttpMethod.POST, "/api/change-password").hasAnyRole("STUDENT", "ADMIN")
+                        .requestMatchers("/api/student/**").hasRole("STUDENT")
 
                         .anyRequest().authenticated()
                 )
