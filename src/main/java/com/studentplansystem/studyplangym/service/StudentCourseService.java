@@ -66,6 +66,72 @@ public class StudentCourseService {
                 .toList();
     }
 
+public StudentCourseResponse updateCourse(
+        String username,
+        Long courseId,
+        StudentCourseRequest request
+) {
+    User user = getUser(username);
+
+    StudentCourse course = studentCourseRepository
+            .findByIdAndUserId(courseId, user.getId())
+            .orElseThrow(() ->
+                    new ResponseStatusException(
+                            HttpStatus.NOT_FOUND,
+                            "Course not found."
+                    )
+            );
+
+    validateRequest(request);
+
+    course.setName(request.getName().trim());
+
+    if (request.getCode() != null &&
+            !request.getCode().isBlank()) {
+        course.setCode(request.getCode().trim());
+    } else {
+        course.setCode(null);
+    }
+
+    course.setDifficulty(
+            request.getDifficulty() == null
+                    ? 3
+                    : request.getDifficulty()
+    );
+
+    course.setPriority(
+            request.getPriority() == null
+                    ? 3
+                    : request.getPriority()
+    );
+
+    course.setNotes(request.getNotes());
+
+    return toResponse(
+            studentCourseRepository.save(course)
+    );
+}
+
+public void deactivateCourse(
+        String username,
+        Long courseId
+) {
+    User user = getUser(username);
+
+    StudentCourse course = studentCourseRepository
+            .findByIdAndUserId(courseId, user.getId())
+            .orElseThrow(() ->
+                    new ResponseStatusException(
+                            HttpStatus.NOT_FOUND,
+                            "Course not found."
+                    )
+            );
+
+    course.setActive(false);
+
+    studentCourseRepository.save(course);
+}
+
     private User getUser(String username) {
         return userRepository.findByUsername(username)
                 .orElseThrow(() ->

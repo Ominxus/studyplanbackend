@@ -45,4 +45,31 @@ public class StudentCourseController {
                 )
         );
     }
+@PutMapping("/{courseId}")
+public ResponseEntity<StudentCourseResponse> updateCourse(
+        @PathVariable Long courseId,
+        @RequestBody StudentCourseRequest request,
+        Authentication authentication
+) {
+    return ResponseEntity.ok(
+            studentCourseService.updateCourse(
+                    authentication.getName(),
+                    courseId,
+                    request
+            )
+    );
+}
+
+@DeleteMapping("/{courseId}")
+public ResponseEntity<Void> deactivateCourse(
+        @PathVariable Long courseId,
+        Authentication authentication
+) {
+    studentCourseService.deactivateCourse(
+            authentication.getName(),
+            courseId
+    );
+
+    return ResponseEntity.noContent().build();
+}
 }
