@@ -1,0 +1,26 @@
+package com.studentplansystem.studyplangym.repository;
+
+import com.studentplansystem.studyplangym.entity.CourseDeadline;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import java.util.List;
+import java.util.Optional;
+
+public interface CourseDeadlineRepository
+        extends JpaRepository<CourseDeadline, Long> {
+
+    List<CourseDeadline>
+        findByStudentCourseUserIdOrderByDueAtAsc(Long userId);
+
+    List<CourseDeadline>
+        findByStudentCourseIdAndStudentCourseUserIdOrderByDueAtAsc(
+                Long courseId,
+                Long userId
+        );
+
+    Optional<CourseDeadline>
+        findByIdAndStudentCourseUserId(
+                Long id,
+                Long userId
+        );
+}
