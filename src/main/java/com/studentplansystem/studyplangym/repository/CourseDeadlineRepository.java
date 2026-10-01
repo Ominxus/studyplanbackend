@@ -10,17 +10,21 @@ public interface CourseDeadlineRepository
         extends JpaRepository<CourseDeadline, Long> {
 
     List<CourseDeadline>
-        findByStudentCourseUserIdOrderByDueAtAsc(Long userId);
+    findByStudentCourseUserIdAndStatusNotOrderByDueAtAsc(
+            Long userId,
+            String status
+    );
 
     List<CourseDeadline>
-        findByStudentCourseIdAndStudentCourseUserIdOrderByDueAtAsc(
-                Long courseId,
-                Long userId
-        );
+    findByStudentCourseIdAndStudentCourseUserIdAndStatusNotOrderByDueAtAsc(
+            Long courseId,
+            Long userId,
+            String status
+    );
 
     Optional<CourseDeadline>
-        findByIdAndStudentCourseUserId(
-                Long id,
-                Long userId
-        );
+    findByIdAndStudentCourseUserId(
+            Long id,
+            Long userId
+    );
 }

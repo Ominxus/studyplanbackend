@@ -18,7 +18,7 @@ public class CorsConfig {
                                 "http://localhost:5173",
                                 "https://studyplanfrontend.vercel.app"
                         )
-                        .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
+                       .allowedMethods("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
                         .allowedHeaders("*");
             }
         };

@@ -46,4 +46,42 @@ public class CourseDeadlineController {
                 )
         );
     }
+@PutMapping("/{deadlineId}")
+public ResponseEntity<CourseDeadlineResponse> updateDeadline(
+        @PathVariable Long deadlineId,
+        @RequestBody CourseDeadlineRequest request,
+        Authentication authentication
+) {
+    return ResponseEntity.ok(
+            courseDeadlineService.updateDeadline(
+                    authentication.getName(),
+                    deadlineId,
+                    request
+            )
+    );
+}
+@PatchMapping("/{deadlineId}/complete")
+public ResponseEntity<CourseDeadlineResponse> completeDeadline(
+        @PathVariable Long deadlineId,
+        Authentication authentication
+) {
+    return ResponseEntity.ok(
+            courseDeadlineService.completeDeadline(
+                    authentication.getName(),
+                    deadlineId
+            )
+    );
+}
+@DeleteMapping("/{deadlineId}")
+public ResponseEntity<Void> cancelDeadline(
+        @PathVariable Long deadlineId,
+        Authentication authentication
+) {
+    courseDeadlineService.cancelDeadline(
+            authentication.getName(),
+            deadlineId
+    );
+
+    return ResponseEntity.noContent().build();
+}
 }

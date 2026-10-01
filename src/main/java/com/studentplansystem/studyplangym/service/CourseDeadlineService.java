@@ -47,7 +47,10 @@ public class CourseDeadlineService {
         validateRequest(request);
 
         StudentCourse course = studentCourseRepository
-                .findByIdAndUserId(request.getCourseId(), user.getId())
+                .findByIdAndUserId(
+                        request.getCourseId(),
+                        user.getId()
+                )
                 .orElseThrow(() ->
                         new ResponseStatusException(
                                 HttpStatus.NOT_FOUND,
@@ -72,7 +75,10 @@ public class CourseDeadlineService {
         );
 
         deadline.setDueAt(request.getDueAt());
-        deadline.setEstimatedMinutes(request.getEstimatedMinutes());
+
+        deadline.setEstimatedMinutes(
+                request.getEstimatedMinutes()
+        );
 
         deadline.setImportance(
                 request.getImportance() == null
@@ -102,12 +108,16 @@ public class CourseDeadlineService {
         if (courseId == null) {
             deadlines =
                     courseDeadlineRepository
-                            .findByStudentCourseUserIdOrderByDueAtAsc(
-                                    user.getId()
+                            .findByStudentCourseUserIdAndStatusNotOrderByDueAtAsc(
+                                    user.getId(),
+                                    "CANCELLED"
                             );
         } else {
             studentCourseRepository
-                    .findByIdAndUserId(courseId, user.getId())
+                    .findByIdAndUserId(
+                            courseId,
+                            user.getId()
+                    )
                     .orElseThrow(() ->
                             new ResponseStatusException(
                                     HttpStatus.NOT_FOUND,
@@ -117,9 +127,10 @@ public class CourseDeadlineService {
 
             deadlines =
                     courseDeadlineRepository
-                            .findByStudentCourseIdAndStudentCourseUserIdOrderByDueAtAsc(
+                            .findByStudentCourseIdAndStudentCourseUserIdAndStatusNotOrderByDueAtAsc(
                                     courseId,
-                                    user.getId()
+                                    user.getId(),
+                                    "CANCELLED"
                             );
         }
 
@@ -127,6 +138,139 @@ public class CourseDeadlineService {
                 .stream()
                 .map(this::toResponse)
                 .toList();
+    }
+
+    public CourseDeadlineResponse updateDeadline(
+            String username,
+            Long deadlineId,
+            CourseDeadlineRequest request
+    ) {
+        User user = getUser(username);
+
+        validateRequest(request);
+
+        CourseDeadline deadline =
+                courseDeadlineRepository
+                        .findByIdAndStudentCourseUserId(
+                                deadlineId,
+                                user.getId()
+                        )
+                        .orElseThrow(() ->
+                                new ResponseStatusException(
+                                        HttpStatus.NOT_FOUND,
+                                        "Deadline not found."
+                                )
+                        );
+
+        StudentCourse course =
+                studentCourseRepository
+                        .findByIdAndUserId(
+                                request.getCourseId(),
+                                user.getId()
+                        )
+                        .orElseThrow(() ->
+                                new ResponseStatusException(
+                                        HttpStatus.NOT_FOUND,
+                                        "Course not found."
+                                )
+                        );
+
+        if (!course.isActive()) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Cannot move a deadline to an inactive course."
+            );
+        }
+
+        deadline.setStudentCourse(course);
+        deadline.setTitle(request.getTitle().trim());
+
+        deadline.setDeadlineType(
+                normalizeType(request.getDeadlineType())
+        );
+
+        deadline.setDueAt(request.getDueAt());
+
+        deadline.setEstimatedMinutes(
+                request.getEstimatedMinutes()
+        );
+
+        deadline.setImportance(
+                request.getImportance() == null
+                        ? 3
+                        : request.getImportance()
+        );
+
+        if (request.getStatus() != null &&
+                !request.getStatus().isBlank()) {
+
+            deadline.setStatus(
+                    normalizeStatus(request.getStatus())
+            );
+        }
+
+        deadline.setNotes(request.getNotes());
+
+        return toResponse(
+                courseDeadlineRepository.save(deadline)
+        );
+    }
+
+    public CourseDeadlineResponse completeDeadline(
+            String username,
+            Long deadlineId
+    ) {
+        User user = getUser(username);
+
+        CourseDeadline deadline =
+                courseDeadlineRepository
+                        .findByIdAndStudentCourseUserId(
+                                deadlineId,
+                                user.getId()
+                        )
+                        .orElseThrow(() ->
+                                new ResponseStatusException(
+                                        HttpStatus.NOT_FOUND,
+                                        "Deadline not found."
+                                )
+                        );
+
+        if ("CANCELLED".equals(deadline.getStatus())) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "A cancelled deadline cannot be completed."
+            );
+        }
+
+        deadline.setStatus("COMPLETED");
+
+        return toResponse(
+                courseDeadlineRepository.save(deadline)
+        );
+    }
+
+    public void cancelDeadline(
+            String username,
+            Long deadlineId
+    ) {
+        User user = getUser(username);
+
+        CourseDeadline deadline =
+                courseDeadlineRepository
+                        .findByIdAndStudentCourseUserId(
+                                deadlineId,
+                                user.getId()
+                        )
+                        .orElseThrow(() ->
+                                new ResponseStatusException(
+                                        HttpStatus.NOT_FOUND,
+                                        "Deadline not found."
+                                )
+                        );
+
+        deadline.setStatus("CANCELLED");
+
+        courseDeadlineRepository.save(deadline);
     }
 
     private User getUser(String username) {
@@ -152,6 +296,7 @@ public class CourseDeadlineService {
 
         if (request.getTitle() == null ||
                 request.getTitle().isBlank()) {
+
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
                     "Deadline title is required."
@@ -174,6 +319,7 @@ public class CourseDeadlineService {
 
         if (request.getEstimatedMinutes() != null &&
                 request.getEstimatedMinutes() <= 0) {
+
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
                     "Estimated minutes must be greater than zero."
@@ -182,16 +328,18 @@ public class CourseDeadlineService {
 
         if (request.getImportance() != null &&
                 (request.getImportance() < 1 ||
-                 request.getImportance() > 5)) {
+                        request.getImportance() > 5)) {
+
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
                     "Importance must be between 1 and 5."
             );
         }
 
-        String type = normalizeType(
-                request.getDeadlineType()
-        );
+        String type =
+                normalizeType(
+                        request.getDeadlineType()
+                );
 
         if (!ALLOWED_TYPES.contains(type)) {
             throw new ResponseStatusException(
@@ -200,9 +348,10 @@ public class CourseDeadlineService {
             );
         }
 
-        String status = normalizeStatus(
-                request.getStatus()
-        );
+        String status =
+                normalizeStatus(
+                        request.getStatus()
+                );
 
         if (!ALLOWED_STATUSES.contains(status)) {
             throw new ResponseStatusException(
