@@ -22,6 +22,12 @@ public interface CourseDeadlineRepository
             String status
     );
 
+    List<CourseDeadline>
+    findByStudentCourseUserIdAndStatusOrderByDueAtAsc(
+            Long userId,
+            String status
+    );
+
     Optional<CourseDeadline>
     findByIdAndStudentCourseUserId(
             Long id,

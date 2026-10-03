@@ -15,6 +15,12 @@ public interface StudentGoalRepository
             String status
     );
 
+    List<StudentGoal>
+    findByUserIdAndStatusOrderByTargetDateAsc(
+            Long userId,
+            String status
+    );
+
     Optional<StudentGoal>
     findByIdAndUserId(
             Long id,
