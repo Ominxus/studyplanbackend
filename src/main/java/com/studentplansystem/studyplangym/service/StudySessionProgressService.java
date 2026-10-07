@@ -58,9 +58,27 @@ public class StudySessionProgressService {
                                 )
                         );
 
-        if ("COMPLETED".equalsIgnoreCase(
-                session.getStatus()
-        )) {
+        /*
+         * Sessions from an older superseded plan should
+         * no longer be completed after adaptive replanning.
+         */
+        if (
+                session.getPlan() != null &&
+                "SUPERSEDED".equalsIgnoreCase(
+                        session.getPlan().getStatus()
+                )
+        ) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "This session belongs to a superseded study plan."
+            );
+        }
+
+        if (
+                "COMPLETED".equalsIgnoreCase(
+                        session.getStatus()
+                )
+        ) {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
                     "This study session is already completed."
@@ -91,16 +109,26 @@ public class StudySessionProgressService {
             );
         }
 
-        session.setActualMinutes(actualMinutes);
-        session.setStatus("COMPLETED");
+        session.setActualMinutes(
+                actualMinutes
+        );
+
+        session.setStatus(
+                "COMPLETED"
+        );
+
         session.setCompletedAt(
                 LocalDateTime.now()
         );
 
         session =
-                sessionRepository.save(session);
+                sessionRepository.save(
+                        session
+                );
 
-        return toResponse(session);
+        return toResponse(
+                session
+        );
     }
 
     private StudySessionResponse toResponse(
@@ -117,24 +145,31 @@ public class StudySessionProgressService {
 
         return new StudySessionResponse(
                 session.getId(),
+
                 course != null
                         ? course.getId()
                         : null,
+
                 course != null
                         ? course.getName()
                         : null,
+
                 deadline != null
                         ? deadline.getId()
                         : null,
+
                 deadline != null
                         ? deadline.getTitle()
                         : null,
+
                 goal != null
                         ? goal.getId()
                         : null,
+
                 goal != null
                         ? goal.getTitle()
                         : null,
+
                 session.getTitle(),
                 session.getStartAt(),
                 session.getEndAt(),

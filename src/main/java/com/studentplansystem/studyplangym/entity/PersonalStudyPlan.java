@@ -19,6 +19,10 @@ public class PersonalStudyPlan {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "source_plan_id")
+    private PersonalStudyPlan sourcePlan;
+
     @Column(name = "plan_name", length = 150)
     private String planName;
 
@@ -60,6 +64,10 @@ public class PersonalStudyPlan {
         return user;
     }
 
+    public PersonalStudyPlan getSourcePlan() {
+        return sourcePlan;
+    }
+
     public String getPlanName() {
         return planName;
     }
@@ -94,6 +102,12 @@ public class PersonalStudyPlan {
 
     public void setUser(User user) {
         this.user = user;
+    }
+
+    public void setSourcePlan(
+            PersonalStudyPlan sourcePlan
+    ) {
+        this.sourcePlan = sourcePlan;
     }
 
     public void setPlanName(String planName) {

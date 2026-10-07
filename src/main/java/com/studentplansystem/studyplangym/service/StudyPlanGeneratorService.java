@@ -240,6 +240,290 @@ public class StudyPlanGeneratorService {
     }
 
     @Transactional
+    public PersonalStudyPlanResponse replan(
+            String username,
+            Long sourcePlanId,
+            StudyPlanGenerationRequest request
+    ) {
+        User user = getUser(username);
+
+        validateRequest(request);
+
+        PersonalStudyPlan sourcePlan =
+                planRepository
+                        .findByIdAndUserId(
+                                sourcePlanId,
+                                user.getId()
+                        )
+                        .orElseThrow(() ->
+                                new ResponseStatusException(
+                                        HttpStatus.NOT_FOUND,
+                                        "Source study plan not found."
+                                )
+                        );
+
+        if ("SUPERSEDED".equalsIgnoreCase(
+                sourcePlan.getStatus()
+        )) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "This study plan has already been superseded by a newer plan."
+            );
+        }
+
+        StudentPreference preference =
+                preferenceRepository
+                        .findByUserId(user.getId())
+                        .orElseGet(() -> {
+                            StudentPreference created =
+                                    new StudentPreference();
+                            created.setUser(user);
+                            return preferenceRepository.save(created);
+                        });
+
+        List<StudentAvailability> availability =
+                availabilityRepository
+                        .findByUserIdAndActiveTrueOrderByDayOfWeekAscStartTimeAsc(
+                                user.getId()
+                        );
+
+        if (availability.isEmpty()) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Add at least one availability period before replanning."
+            );
+        }
+
+        List<CourseDeadline> deadlines =
+                deadlineRepository
+                        .findByStudentCourseUserIdAndStatusOrderByDueAtAsc(
+                                user.getId(),
+                                "PENDING"
+                        );
+
+        if (deadlines.isEmpty()) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "No pending deadlines are available for replanning."
+            );
+        }
+
+        List<StudentGoal> activeGoals =
+                goalRepository
+                        .findByUserIdAndStatusOrderByTargetDateAsc(
+                                user.getId(),
+                                "ACTIVE"
+                        );
+
+        List<WorkItem> workItems =
+                new ArrayList<>();
+
+        int recognisedCompletedMinutes = 0;
+        int originalWorkloadMinutes = 0;
+
+        for (CourseDeadline deadline : deadlines) {
+
+            if (deadline.getDueAt()
+                    .toLocalDate()
+                    .isBefore(request.getStartDate())) {
+                continue;
+            }
+
+            int estimatedMinutes =
+                    deadline.getEstimatedMinutes() != null
+                            ? deadline.getEstimatedMinutes()
+                            : preference.getPreferredSessionMinutes();
+
+            int completedMinutes =
+                    sessionRepository
+                            .findByDeadlineIdAndPlanUserIdAndStatus(
+                                    deadline.getId(),
+                                    user.getId(),
+                                    "COMPLETED"
+                            )
+                            .stream()
+                            .mapToInt(session ->
+                                    session.getActualMinutes() != null
+                                            ? session.getActualMinutes()
+                                            : session.getPlannedMinutes()
+                            )
+                            .sum();
+
+            int remainingMinutes =
+                    Math.max(
+                            0,
+                            estimatedMinutes - completedMinutes
+                    );
+
+            originalWorkloadMinutes +=
+                    estimatedMinutes;
+
+            recognisedCompletedMinutes +=
+                    Math.min(
+                            completedMinutes,
+                            estimatedMinutes
+                    );
+
+            if (remainingMinutes <= 0) {
+                continue;
+            }
+
+            StudentGoal relevantGoal =
+                    findRelevantGoal(
+                            deadline,
+                            activeGoals
+                    );
+
+            workItems.add(
+                    new WorkItem(
+                            deadline,
+                            relevantGoal,
+                            remainingMinutes
+                    )
+            );
+        }
+
+        if (workItems.isEmpty()) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "There is no remaining deadline workload to replan."
+            );
+        }
+
+        PersonalStudyPlan adaptivePlan =
+                new PersonalStudyPlan();
+
+        adaptivePlan.setUser(user);
+        adaptivePlan.setSourcePlan(sourcePlan);
+
+        adaptivePlan.setPlanName(
+                request.getPlanName() == null ||
+                        request.getPlanName().isBlank()
+                        ? "Adaptive Study Plan - " +
+                        request.getStartDate()
+                        : request.getPlanName().trim()
+        );
+
+        adaptivePlan.setStartDate(
+                request.getStartDate()
+        );
+
+        adaptivePlan.setEndDate(
+                request.getEndDate()
+        );
+
+        adaptivePlan.setStatus(
+                "GENERATED"
+        );
+
+        adaptivePlan.setGenerationMethod(
+                "ADAPTIVE"
+        );
+
+        adaptivePlan =
+                planRepository.save(
+                        adaptivePlan
+                );
+
+        List<StudySession> generatedSessions =
+                generateSessions(
+                        adaptivePlan,
+                        request,
+                        preference,
+                        availability,
+                        workItems
+                );
+
+        int plannedMinutes =
+                generatedSessions.stream()
+                        .mapToInt(
+                                StudySession::getPlannedMinutes
+                        )
+                        .sum();
+
+        int remainingUnscheduledMinutes =
+                workItems.stream()
+                        .mapToInt(
+                                item -> item.remainingMinutes
+                        )
+                        .sum();
+
+        StringBuilder summary =
+                new StringBuilder();
+
+        summary.append(
+                "Adaptive plan generated from plan #"
+        )
+                .append(sourcePlan.getId())
+                .append(". Recognised ")
+                .append(
+                        formatMinutes(
+                                recognisedCompletedMinutes
+                        )
+                )
+                .append(
+                        " of completed study time from "
+                )
+                .append(
+                        formatMinutes(
+                                originalWorkloadMinutes
+                        )
+                )
+                .append(
+                        " of identified workload. Generated "
+                )
+                .append(
+                        generatedSessions.size()
+                )
+                .append(
+                        " new study sessions ("
+                )
+                .append(
+                        formatMinutes(
+                                plannedMinutes
+                        )
+                )
+                .append("). ");
+
+        if (remainingUnscheduledMinutes == 0) {
+            summary.append(
+                    "All remaining workload was scheduled."
+            );
+        } else {
+            summary.append(
+                    formatMinutes(
+                            remainingUnscheduledMinutes
+                    )
+            )
+                    .append(
+                            " of remaining workload could not fit within the selected availability and plan period."
+                    );
+        }
+
+        adaptivePlan.setSummary(
+                summary.toString()
+        );
+
+        adaptivePlan =
+                planRepository.save(
+                        adaptivePlan
+                );
+
+        sourcePlan.setStatus(
+                "SUPERSEDED"
+        );
+
+        planRepository.save(
+                sourcePlan
+        );
+
+        return toResponse(
+                adaptivePlan,
+                generatedSessions
+        );
+    }
+
+    @Transactional
     public PersonalStudyPlanResponse getLatestPlan(
             String username
     ) {
@@ -1371,6 +1655,9 @@ public class StudyPlanGeneratorService {
 
         return new PersonalStudyPlanResponse(
                 plan.getId(),
+                plan.getSourcePlan() != null
+                        ? plan.getSourcePlan().getId()
+                        : null,
                 plan.getPlanName(),
                 plan.getStartDate(),
                 plan.getEndDate(),

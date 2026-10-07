@@ -32,6 +32,21 @@ public class PersonalStudyPlanController {
         );
     }
 
+    @PostMapping("/{planId}/replan")
+    public ResponseEntity<PersonalStudyPlanResponse> replan(
+            @PathVariable Long planId,
+            @RequestBody StudyPlanGenerationRequest request,
+            Authentication authentication
+    ) {
+        return ResponseEntity.ok(
+                generatorService.replan(
+                        authentication.getName(),
+                        planId,
+                        request
+                )
+        );
+    }
+
     @GetMapping("/latest")
     public ResponseEntity<PersonalStudyPlanResponse> getLatestPlan(
             Authentication authentication

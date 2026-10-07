@@ -7,6 +7,7 @@ import java.util.List;
 public class PersonalStudyPlanResponse {
 
     private Long id;
+    private Long sourcePlanId;
     private String planName;
     private LocalDate startDate;
     private LocalDate endDate;
@@ -18,6 +19,7 @@ public class PersonalStudyPlanResponse {
 
     public PersonalStudyPlanResponse(
             Long id,
+            Long sourcePlanId,
             String planName,
             LocalDate startDate,
             LocalDate endDate,
@@ -28,6 +30,7 @@ public class PersonalStudyPlanResponse {
             List<StudySessionResponse> sessions
     ) {
         this.id = id;
+        this.sourcePlanId = sourcePlanId;
         this.planName = planName;
         this.startDate = startDate;
         this.endDate = endDate;
@@ -38,13 +41,43 @@ public class PersonalStudyPlanResponse {
         this.sessions = sessions;
     }
 
-    public Long getId() { return id; }
-    public String getPlanName() { return planName; }
-    public LocalDate getStartDate() { return startDate; }
-    public LocalDate getEndDate() { return endDate; }
-    public String getStatus() { return status; }
-    public String getGenerationMethod() { return generationMethod; }
-    public String getSummary() { return summary; }
-    public LocalDateTime getGeneratedAt() { return generatedAt; }
-    public List<StudySessionResponse> getSessions() { return sessions; }
+    public Long getId() {
+        return id;
+    }
+
+    public Long getSourcePlanId() {
+        return sourcePlanId;
+    }
+
+    public String getPlanName() {
+        return planName;
+    }
+
+    public LocalDate getStartDate() {
+        return startDate;
+    }
+
+    public LocalDate getEndDate() {
+        return endDate;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public String getGenerationMethod() {
+        return generationMethod;
+    }
+
+    public String getSummary() {
+        return summary;
+    }
+
+    public LocalDateTime getGeneratedAt() {
+        return generatedAt;
+    }
+
+    public List<StudySessionResponse> getSessions() {
+        return sessions;
+    }
 }

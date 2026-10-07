@@ -19,4 +19,11 @@ public interface StudySessionRepository
             Long sessionId,
             Long userId
     );
+
+    List<StudySession>
+    findByDeadlineIdAndPlanUserIdAndStatus(
+            Long deadlineId,
+            Long userId,
+            String status
+    );
 }
