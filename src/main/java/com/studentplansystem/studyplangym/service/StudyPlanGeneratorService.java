@@ -107,22 +107,47 @@ public class StudyPlanGeneratorService {
                 continue;
             }
 
+            int estimatedMinutes =
+                    deadline.getEstimatedMinutes() != null
+                            ? deadline.getEstimatedMinutes()
+                            : preference.getPreferredSessionMinutes();
+
+            int completedMinutes =
+                    sessionRepository
+                            .findByDeadlineIdAndPlanUserIdAndStatus(
+                                    deadline.getId(),
+                                    user.getId(),
+                                    "COMPLETED"
+                            )
+                            .stream()
+                            .mapToInt(session ->
+                                    session.getActualMinutes() != null
+                                            ? session.getActualMinutes()
+                                            : session.getPlannedMinutes()
+                            )
+                            .sum();
+
+            int remainingMinutes =
+                    Math.max(
+                            0,
+                            estimatedMinutes - completedMinutes
+                    );
+
+            if (remainingMinutes <= 0) {
+                continue;
+            }
+
             StudentGoal relevantGoal =
                     findRelevantGoal(
                             deadline,
                             activeGoals
                     );
 
-            int requiredMinutes =
-                    deadline.getEstimatedMinutes() != null
-                            ? deadline.getEstimatedMinutes()
-                            : preference.getPreferredSessionMinutes();
-
             workItems.add(
                     new WorkItem(
                             deadline,
                             relevantGoal,
-                            requiredMinutes
+                            remainingMinutes
                     )
             );
         }
@@ -130,7 +155,7 @@ public class StudyPlanGeneratorService {
         if (workItems.isEmpty()) {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
-                    "No schedulable pending deadlines were found in this planning period."
+                    "There is no remaining deadline workload to schedule in this planning period."
             );
         }
 
