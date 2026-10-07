@@ -1418,8 +1418,10 @@ public class StudyPlanGeneratorService {
                 session.getStartAt(),
                 session.getEndAt(),
                 session.getPlannedMinutes(),
+                session.getActualMinutes(),
                 session.getStatus(),
-                session.getRationale()
+                session.getRationale(),
+                session.getCompletedAt()
         );
     }
 

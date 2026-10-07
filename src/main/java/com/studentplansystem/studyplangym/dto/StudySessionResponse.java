@@ -15,8 +15,10 @@ public class StudySessionResponse {
     private LocalDateTime startAt;
     private LocalDateTime endAt;
     private int plannedMinutes;
+    private Integer actualMinutes;
     private String status;
     private String rationale;
+    private LocalDateTime completedAt;
 
     public StudySessionResponse(
             Long id,
@@ -30,8 +32,10 @@ public class StudySessionResponse {
             LocalDateTime startAt,
             LocalDateTime endAt,
             int plannedMinutes,
+            Integer actualMinutes,
             String status,
-            String rationale
+            String rationale,
+            LocalDateTime completedAt
     ) {
         this.id = id;
         this.courseId = courseId;
@@ -44,21 +48,69 @@ public class StudySessionResponse {
         this.startAt = startAt;
         this.endAt = endAt;
         this.plannedMinutes = plannedMinutes;
+        this.actualMinutes = actualMinutes;
         this.status = status;
         this.rationale = rationale;
+        this.completedAt = completedAt;
     }
 
-    public Long getId() { return id; }
-    public Long getCourseId() { return courseId; }
-    public String getCourseName() { return courseName; }
-    public Long getDeadlineId() { return deadlineId; }
-    public String getDeadlineTitle() { return deadlineTitle; }
-    public Long getGoalId() { return goalId; }
-    public String getGoalTitle() { return goalTitle; }
-    public String getTitle() { return title; }
-    public LocalDateTime getStartAt() { return startAt; }
-    public LocalDateTime getEndAt() { return endAt; }
-    public int getPlannedMinutes() { return plannedMinutes; }
-    public String getStatus() { return status; }
-    public String getRationale() { return rationale; }
+    public Long getId() {
+        return id;
+    }
+
+    public Long getCourseId() {
+        return courseId;
+    }
+
+    public String getCourseName() {
+        return courseName;
+    }
+
+    public Long getDeadlineId() {
+        return deadlineId;
+    }
+
+    public String getDeadlineTitle() {
+        return deadlineTitle;
+    }
+
+    public Long getGoalId() {
+        return goalId;
+    }
+
+    public String getGoalTitle() {
+        return goalTitle;
+    }
+
+    public String getTitle() {
+        return title;
+    }
+
+    public LocalDateTime getStartAt() {
+        return startAt;
+    }
+
+    public LocalDateTime getEndAt() {
+        return endAt;
+    }
+
+    public int getPlannedMinutes() {
+        return plannedMinutes;
+    }
+
+    public Integer getActualMinutes() {
+        return actualMinutes;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public String getRationale() {
+        return rationale;
+    }
+
+    public LocalDateTime getCompletedAt() {
+        return completedAt;
+    }
 }
