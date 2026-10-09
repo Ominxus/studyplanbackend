@@ -20,6 +20,12 @@ public interface PersonalStudyPlanRepository
     );
 
     Optional<PersonalStudyPlan>
+    findFirstByUserIdAndStatusOrderByGeneratedAtDesc(
+            Long userId,
+            String status
+    );
+
+    Optional<PersonalStudyPlan>
     findByIdAndUserId(
             Long id,
             Long userId

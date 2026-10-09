@@ -558,13 +558,14 @@ public class StudyPlanGeneratorService {
 
         PersonalStudyPlan plan =
                 planRepository
-                        .findFirstByUserIdOrderByGeneratedAtDesc(
-                                user.getId()
+                        .findFirstByUserIdAndStatusOrderByGeneratedAtDesc(
+                                user.getId(),
+                                "GENERATED"
                         )
                         .orElseThrow(() ->
                                 new ResponseStatusException(
                                         HttpStatus.NOT_FOUND,
-                                        "No generated study plan found."
+                                        "No current study plan found."
                                 )
                         );
 

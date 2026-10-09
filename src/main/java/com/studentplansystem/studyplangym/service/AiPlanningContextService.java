@@ -97,7 +97,10 @@ public class AiPlanningContextService {
 
         Optional<PersonalStudyPlan> latestPlan =
                 personalStudyPlanRepository
-                        .findFirstByUserIdOrderByGeneratedAtDesc(userId);
+                        .findFirstByUserIdAndStatusOrderByGeneratedAtDesc(
+                                userId,
+                                "GENERATED"
+                        );
 
         StringBuilder context = new StringBuilder();
 
