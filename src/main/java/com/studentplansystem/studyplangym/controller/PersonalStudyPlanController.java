@@ -1,11 +1,14 @@
 package com.studentplansystem.studyplangym.controller;
 
 import com.studentplansystem.studyplangym.dto.PersonalStudyPlanResponse;
+import com.studentplansystem.studyplangym.dto.PlanHistoryItemResponse;
 import com.studentplansystem.studyplangym.dto.StudyPlanGenerationRequest;
 import com.studentplansystem.studyplangym.service.StudyPlanGeneratorService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/student/plans")
@@ -53,6 +56,17 @@ public class PersonalStudyPlanController {
     ) {
         return ResponseEntity.ok(
                 generatorService.getLatestPlan(
+                        authentication.getName()
+                )
+        );
+    }
+
+    @GetMapping("/history")
+    public ResponseEntity<List<PlanHistoryItemResponse>> getPlanHistory(
+            Authentication authentication
+    ) {
+        return ResponseEntity.ok(
+                generatorService.getPlanHistory(
                         authentication.getName()
                 )
         );

@@ -1,6 +1,7 @@
 package com.studentplansystem.studyplangym.service;
 
 import com.studentplansystem.studyplangym.dto.PersonalStudyPlanResponse;
+import com.studentplansystem.studyplangym.dto.PlanHistoryItemResponse;
 import com.studentplansystem.studyplangym.dto.StudyPlanGenerationRequest;
 import com.studentplansystem.studyplangym.dto.StudySessionResponse;
 import com.studentplansystem.studyplangym.entity.*;
@@ -548,6 +549,86 @@ public class StudyPlanGeneratorService {
                 adaptivePlan,
                 generatedSessions
         );
+    }
+
+    @Transactional
+    public List<PlanHistoryItemResponse> getPlanHistory(
+            String username
+    ) {
+        User user = getUser(username);
+
+        List<PersonalStudyPlan> plans =
+                planRepository
+                        .findByUserIdOrderByGeneratedAtDesc(
+                                user.getId()
+                        );
+
+        List<PlanHistoryItemResponse> history =
+                new ArrayList<>();
+
+        for (PersonalStudyPlan plan : plans) {
+
+            List<StudySession> sessions =
+                    sessionRepository
+                            .findByPlanIdOrderByStartAtAsc(
+                                    plan.getId()
+                            );
+
+            int sessionCount =
+                    sessions.size();
+
+            int completedSessionCount =
+                    (int) sessions.stream()
+                            .filter(session ->
+                                    "COMPLETED".equalsIgnoreCase(
+                                            session.getStatus()
+                                    )
+                            )
+                            .count();
+
+            int plannedMinutes =
+                    sessions.stream()
+                            .mapToInt(
+                                    StudySession::getPlannedMinutes
+                            )
+                            .sum();
+
+            int actualCompletedMinutes =
+                    sessions.stream()
+                            .filter(session ->
+                                    "COMPLETED".equalsIgnoreCase(
+                                            session.getStatus()
+                                    )
+                            )
+                            .mapToInt(session ->
+                                    session.getActualMinutes() != null
+                                            ? session.getActualMinutes()
+                                            : session.getPlannedMinutes()
+                            )
+                            .sum();
+
+            history.add(
+                    new PlanHistoryItemResponse(
+                            plan.getId(),
+                            plan.getSourcePlan() != null
+                                    ? plan.getSourcePlan().getId()
+                                    : null,
+                            plan.getPlanName(),
+                            plan.getStartDate(),
+                            plan.getEndDate(),
+                            plan.getStatus(),
+                            plan.getGenerationMethod(),
+                            plan.getSummary(),
+                            plan.getGeneratedAt(),
+                            sessionCount,
+                            completedSessionCount,
+                            plannedMinutes,
+                            actualCompletedMinutes
+                    )
+            );
+        }
+
+        return history;
     }
 
     @Transactional
