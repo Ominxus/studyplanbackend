@@ -281,7 +281,31 @@ Maximum score per scenario: 25.
 **Result**
 PASS
 
-- D07: maximum daily study limit
+### D07 — Maximum daily study limit
+
+**Input**
+- Remaining workload: 500 minutes
+- Planning period: Friday 16 October 2026 only
+- Raw availability: 00:00–17:00
+- Maximum daily study time: 360 minutes
+- Break duration: 30 minutes
+- Preferred study period: EVENING
+
+**Expected**
+- Total scheduled study does not exceed 360 minutes
+- Break requirement is respected
+- Remaining workload is reported as unscheduled
+
+**Observed**
+- Two 180-minute sessions were generated
+- Total planned study: 360 minutes
+- A 30-minute break separated the sessions
+- 140 minutes (2 hr 20 min) remained unscheduled
+- Both sessions were correctly identified as outside the preferred evening period
+
+**Result**
+PASS
+
 - D08: maximum session duration
 - D09: multiple competing deadlines
 - D10: urgency changes priority ordering
