@@ -261,7 +261,26 @@ Maximum score per scenario: 25.
 
 ## Remaining Formal Scenarios
 
-- D06: insufficient total availability
+### D06 — Insufficient total availability
+
+**Input**
+- Remaining workload: 300 minutes
+- Planning period: Monday 12 October 2026 only
+- Available study time: 18:30–21:30 = 180 minutes
+
+**Expected**
+- Planner schedules only the available 180 minutes
+- No session exceeds the availability window
+- Remaining 120 minutes are reported as unscheduled
+
+**Observed**
+- One session was generated from 18:30 to 21:30
+- Planned duration: 180 minutes
+- Summary reported 2 hours of workload could not fit
+
+**Result**
+PASS
+
 - D07: maximum daily study limit
 - D08: maximum session duration
 - D09: multiple competing deadlines
