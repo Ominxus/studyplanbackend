@@ -330,8 +330,49 @@ PASS
 **Result**
 PASS
 
-- D09: multiple competing deadlines
-- D10: urgency changes priority ordering
+### D09 — Multiple competing deadlines
+
+**Input**
+- Planning period: Monday 12 October 2026
+- Available capacity: 180 minutes
+- Networking remaining workload: 120 minutes
+- Networking priority score: 48
+- Software Testing workload: 180 minutes
+- Software Testing deadline due within 3 days
+- Software Testing priority score: 54
+
+**Expected**
+- Limited capacity forces the planner to choose between competing deadlines
+- Higher-scoring Software Testing work is scheduled before Networking
+
+**Observed**
+- One 180-minute Software Testing session was generated
+- Software Testing received priority score 54
+- Networking received lower priority score 48 and did not fit into the available period
+
+**Result**
+PASS
+
+### D10 — Urgency changes priority ordering
+
+**Input**
+- Same courses, importance values, difficulty values, priorities, goals and planning period as D09
+- Only the Software Testing due date was moved from 15 October to 20 November 2026
+
+**Expected**
+- Software Testing loses its urgency bonus
+- Networking becomes the higher-priority workload
+- Scheduling order changes accordingly
+
+**Observed**
+- Networking priority score remained 48
+- Software Testing priority score fell from 54 to 39
+- Networking was scheduled first for 120 minutes
+- After the required 30-minute break, the remaining 30 minutes of availability were allocated to Software Testing
+
+**Result**
+PASS
+
 - A04: multiple adaptive replans in sequence
 - L03: plan history order and statistics
 - AI04: competing courses/deadlines
