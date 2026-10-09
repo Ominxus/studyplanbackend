@@ -258,6 +258,11 @@ public class StudyPlanGeneratorService {
         plan.setSummary(summary.toString());
         plan = planRepository.save(plan);
 
+        supersedeOtherCurrentPlans(
+                user.getId(),
+                plan.getId()
+        );
+
         return toResponse(
                 plan,
                 generatedSessions
@@ -534,12 +539,9 @@ public class StudyPlanGeneratorService {
                         adaptivePlan
                 );
 
-        sourcePlan.setStatus(
-                "SUPERSEDED"
-        );
-
-        planRepository.save(
-                sourcePlan
+        supersedeOtherCurrentPlans(
+                user.getId(),
+                adaptivePlan.getId()
         );
 
         return toResponse(
@@ -1758,6 +1760,39 @@ public class StudyPlanGeneratorService {
                 " hr " +
                 remainder +
                 " min";
+    }
+
+    private void supersedeOtherCurrentPlans(
+            Long userId,
+            Long currentPlanId
+    ) {
+
+        List<PersonalStudyPlan> plans =
+                planRepository
+                        .findByUserIdOrderByGeneratedAtDesc(
+                                userId
+                        );
+
+        for (PersonalStudyPlan existingPlan : plans) {
+
+            if (existingPlan.getId().equals(currentPlanId)) {
+                continue;
+            }
+
+            if ("SUPERSEDED".equalsIgnoreCase(
+                    existingPlan.getStatus()
+            )) {
+                continue;
+            }
+
+            existingPlan.setStatus(
+                    "SUPERSEDED"
+            );
+
+            planRepository.save(
+                    existingPlan
+            );
+        }
     }
 
     private static class WorkItem {
