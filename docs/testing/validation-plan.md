@@ -306,7 +306,30 @@ PASS
 **Result**
 PASS
 
-- D08: maximum session duration
+### D08 — Maximum session duration
+
+**Input**
+- Remaining workload: 300 minutes
+- Preferred session duration: 240 minutes
+- Maximum session duration: 240 minutes
+- Break duration: 30 minutes
+- Planning period: Friday 16 October 2026
+
+**Expected**
+- No individual study session exceeds 240 minutes
+- Total scheduled workload remains 300 minutes
+- Break requirement is respected
+
+**Observed**
+- One 240-minute session was generated
+- One 60-minute session was generated
+- No session exceeded the configured maximum
+- A 30-minute break separated the sessions
+- All 300 minutes of remaining workload were scheduled
+
+**Result**
+PASS
+
 - D09: multiple competing deadlines
 - D10: urgency changes priority ordering
 - A04: multiple adaptive replans in sequence
