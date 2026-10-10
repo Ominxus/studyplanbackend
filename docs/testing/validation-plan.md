@@ -439,6 +439,45 @@ PASS
 **Result**
 PASS
 
-- AI04: competing courses/deadlines
+### AI04 — Competing courses and deadlines
+
+**Input**
+- Networking Final Exam due 15 November 2026
+- Networking estimated workload: 480 minutes
+- Networking completed study: 525 minutes
+- Active Networking preparation goal
+- Temporary Software Testing exam due 13 October 2026
+- Software Testing estimated workload: 180 minutes
+- Importance: 5/5
+- No completed Software Testing study time
+- No current GENERATED study plan
+
+**Expected**
+- AI identifies Software Testing as the immediate priority
+- AI recognises that Networking has already met or exceeded its estimated workload
+- AI does not invent additional required Networking workload
+- AI identifies relevant availability before the urgent deadline
+- AI recognises that no current generated study plan exists
+
+**Observed**
+- Software Testing was correctly identified as the top priority
+- The response stated that all 180 minutes remained for Software Testing
+- The response correctly identified Monday evening as the available study window before the exam
+- Networking was correctly reported as having 525 completed minutes against a 480-minute estimate
+- The response recommended readiness checking rather than blindly assigning more Networking workload
+- The response correctly stated that no generated study plan currently exists
+- No unsupported student facts or workload values were introduced
+
+**AI quality rubric**
+- Factual grounding: 5/5
+- Relevance: 5/5
+- Actionability: 5/5
+- Consistency: 5/5
+- Clarity: 5/5
+- Total: 25/25
+
+**Result**
+PASS
+
 - AI05: insufficient availability risk detection
 - AI06: preference mismatch detection
