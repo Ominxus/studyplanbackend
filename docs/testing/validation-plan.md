@@ -373,7 +373,44 @@ PASS
 **Result**
 PASS
 
-- A04: multiple adaptive replans in sequence
+### A04 — Multiple adaptive replans in sequence
+
+**Input**
+- Identified Networking workload temporarily set to 1125 minutes
+- Existing completed study before the scenario: 525 minutes
+- Initial remaining workload: 600 minutes
+- Base deterministic plan generated for the remaining workload
+
+**Sequence**
+1. Base deterministic plan #15 scheduled 600 minutes.
+2. One 180-minute session was completed.
+3. Cumulative completed study increased to 705 minutes.
+4. Adaptive plan #16 was generated from plan #15.
+5. Remaining workload was correctly calculated as 420 minutes.
+6. Another 180-minute session was completed from plan #16.
+7. Cumulative completed study increased to 885 minutes.
+8. Adaptive plan #17 was generated from plan #16.
+9. Remaining workload was correctly calculated as 240 minutes.
+
+**Expected**
+- Completed actual study is accumulated across the complete plan history
+- Each adaptive plan schedules only the remaining workload
+- Each newly generated adaptive plan references its immediate source plan
+- The previous current plan becomes SUPERSEDED
+- Only the newest plan remains GENERATED
+
+**Observed**
+- Plan #15: DETERMINISTIC, SUPERSEDED
+- Plan #16: ADAPTIVE, source plan #15, SUPERSEDED
+- Plan #17: ADAPTIVE, source plan #16, GENERATED
+- First adaptive remaining workload: 420 minutes
+- Second adaptive remaining workload: 240 minutes
+- Final summary recognised 885 completed minutes from 1125 total minutes
+- All 240 remaining minutes were scheduled
+
+**Result**
+PASS
+
 - L03: plan history order and statistics
 - AI04: competing courses/deadlines
 - AI05: insufficient availability risk detection
