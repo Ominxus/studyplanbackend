@@ -517,4 +517,42 @@ PASS
 **Result**
 PASS
 
-- AI06: preference mismatch detection
+### AI06 — Preference mismatch detection
+
+**Input**
+- Temporary Software Testing exam due 13 October 2026 at 09:00
+- Estimated remaining workload: 180 minutes
+- Importance: 5/5
+- No completed Software Testing study time
+- Preferred study period: MORNING
+- Only pre-deadline availability: Monday 18:30–21:30
+- No current GENERATED study plan
+
+**Expected**
+- AI identifies Software Testing as the immediate priority
+- AI recognises that the only feasible pre-deadline study period conflicts with the student's preferred morning period
+- AI treats the preferred period as a soft preference rather than a hard scheduling restriction
+- AI recommends use of the feasible evening window
+- AI does not claim that the workload is impossible to complete
+
+**Observed**
+- Software Testing was correctly identified as the top priority
+- The response correctly stated that all 180 estimated minutes remained
+- Monday evening was correctly identified as the only listed pre-deadline availability
+- The response explicitly identified the conflict with the preferred morning study period
+- The response stated that the full 180-minute workload could still fit into the evening window
+- It recommended using the feasible evening period despite the preference mismatch
+- It correctly noted that the schedule leaves little additional buffer
+- No unsupported student facts or workload values were introduced
+
+**AI quality rubric**
+- Factual grounding: 5/5
+- Relevance: 5/5
+- Actionability: 5/5
+- Consistency: 5/5
+- Clarity: 5/5
+- Total: 25/25
+
+**Result**
+PASS
+
