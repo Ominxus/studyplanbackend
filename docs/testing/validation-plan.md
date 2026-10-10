@@ -479,5 +479,42 @@ PASS
 **Result**
 PASS
 
-- AI05: insufficient availability risk detection
+### AI05 — Insufficient availability risk detection
+
+**Input**
+- Temporary Software Testing exam due 13 October 2026 at 09:00
+- Estimated remaining workload: 420 minutes
+- Importance: 5/5
+- No completed study time for the deadline
+- Only 180 minutes of declared availability before the deadline
+- No current GENERATED study plan
+
+**Expected**
+- AI identifies the approaching deadline as a major priority
+- AI recognises that the declared availability is insufficient for the remaining workload
+- AI does not claim that all 420 minutes can be completed inside the available 180-minute window
+- AI provides realistic actions for addressing the capacity shortage
+- AI recognises the absence of a current generated plan
+
+**Observed**
+- Software Testing was correctly identified as the immediate priority
+- The response correctly stated that 420 minutes remained
+- The response identified only 180 minutes of available study time before the deadline
+- The response described a substantial gap between workload and available capacity
+- It recommended finding additional study time rather than claiming the workload would fit
+- It recommended using the existing Monday availability for focused preparation
+- It correctly reported that no generated study plan currently exists
+- No unsupported student information or workload values were introduced
+
+**AI quality rubric**
+- Factual grounding: 5/5
+- Relevance: 5/5
+- Actionability: 5/5
+- Consistency: 5/5
+- Clarity: 5/5
+- Total: 25/25
+
+**Result**
+PASS
+
 - AI06: preference mismatch detection
