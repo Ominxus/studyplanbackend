@@ -411,7 +411,34 @@ PASS
 **Result**
 PASS
 
-- L03: plan history order and statistics
+### L03 — Plan history ordering and statistics
+
+**Input**
+- Existing historical deterministic and adaptive study plans
+- History requested through `/api/student/plans/history`
+- Database statistics independently calculated using SQL
+
+**Expected**
+- Plans are returned in descending generation-time order
+- Session counts match the database
+- Completed-session counts match the database
+- Planned-minute totals match the database
+- Actual completed-minute totals match the database
+- Adaptive source-plan relationships are preserved
+
+**Observed**
+- Plans were returned newest-first in the order #7, #6, #5, #4, #3, #2, #1
+- Every returned session count matched the SQL calculation
+- Every completed-session count matched the SQL calculation
+- Every planned-minute total matched the SQL calculation
+- Every actual completed-minute total matched the SQL calculation
+- Adaptive lineage was correctly reported:
+  - Plan #5 referenced source plan #4
+  - Plan #6 referenced source plan #5
+
+**Result**
+PASS
+
 - AI04: competing courses/deadlines
 - AI05: insufficient availability risk detection
 - AI06: preference mismatch detection
